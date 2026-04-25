@@ -8,6 +8,11 @@ export class InputManager {
   isDraggingTower = false;
   private dragCandidate: { towerType: TowerType; pointerId: number; startX: number; startY: number } | null = null;
   private suppressNextPaletteClick = false;
+  private readonly activePointers = new Map<number, Vector2>();
+  private pendingMapPress: { pointerId: number; startScreen: Vector2; lastScreen: Vector2; moved: boolean } | null = null;
+  private lastPinchDistance = 0;
+  private isCameraGesture = false;
+  private spacePanActive = false;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -22,15 +27,34 @@ export class InputManager {
     this.canvas.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       if (this.isUiHitZone(event)) return;
-      const worldPosition = this.getWorldPosition(event);
+      const screenPosition = this.getScreenPosition(event);
+      const worldPosition = this.game.screenToWorld(screenPosition);
       this.pointerWorldPosition = worldPosition;
-
-      this.game.handleMapPress(worldPosition);
+      this.activePointers.set(event.pointerId, screenPosition);
+      this.pendingMapPress = {
+        pointerId: event.pointerId,
+        startScreen: screenPosition,
+        lastScreen: screenPosition,
+        moved: false
+      };
+      if (this.canvas.setPointerCapture) {
+        this.canvas.setPointerCapture(event.pointerId);
+      }
     }, { passive: false });
 
     this.canvas.addEventListener("pointermove", (event) => {
       event.preventDefault();
-      this.pointerWorldPosition = this.getWorldPosition(event);
+      const screenPosition = this.getScreenPosition(event);
+      this.pointerWorldPosition = this.game.screenToWorld(screenPosition);
+      this.handleCameraMove(event, screenPosition);
+    }, { passive: false });
+
+    this.canvas.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      if (this.isUiHitZone(event)) return;
+      const screenPosition = this.getScreenPosition(event);
+      const zoomFactor = event.deltaY < 0 ? 1.12 : 0.9;
+      this.game.zoomCameraAtScreenPoint(this.game.cameraZoom * zoomFactor, screenPosition);
     }, { passive: false });
 
     this.canvas.addEventListener("pointerleave", () => {
@@ -51,17 +75,18 @@ export class InputManager {
       }
 
       if (this.isDraggingTower) {
-        this.pointerWorldPosition = this.getWorldPosition(event);
+        this.pointerWorldPosition = this.game.screenToWorld(this.getScreenPosition(event));
       }
     }, { passive: false });
 
     window.addEventListener("pointerup", (event) => {
+      this.handleCanvasPointerUp(event);
       const candidate = this.dragCandidate;
       if (!candidate) return;
       event.preventDefault();
 
       if (this.isDraggingTower) {
-        const worldPosition = this.getWorldPosition(event);
+        const worldPosition = this.game.screenToWorld(this.getScreenPosition(event));
         if (this.isInsideCanvas(event) && !this.isUiHitZone(event)) {
           this.game.tryPlaceTower(worldPosition, candidate.towerType);
         }
@@ -82,6 +107,10 @@ export class InputManager {
       this.isDraggingTower = false;
       this.previewTower = null;
       this.pointerWorldPosition = null;
+      this.activePointers.clear();
+      this.pendingMapPress = null;
+      this.lastPinchDistance = 0;
+      this.isCameraGesture = false;
     });
 
     this.canvas.addEventListener("contextmenu", (event) => event.preventDefault());
@@ -127,7 +156,7 @@ export class InputManager {
         }
 
         if (!this.isDraggingTower) return;
-        this.pointerWorldPosition = this.getWorldPosition(event);
+        this.pointerWorldPosition = this.game.screenToWorld(this.getScreenPosition(event));
       }, { passive: false });
 
       button.addEventListener("contextmenu", (event) => event.preventDefault());
@@ -136,26 +165,108 @@ export class InputManager {
 
   private registerKeyboardEvents(): void {
     window.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape") return;
-      this.game.cancelPlacementMode();
-      this.previewTower = null;
-      this.dragCandidate = null;
-      this.isDraggingTower = false;
-      this.pointerWorldPosition = null;
+      if (event.key === " ") {
+        event.preventDefault();
+        this.spacePanActive = true;
+        return;
+      }
+
+      if (event.key === "Escape") {
+        this.game.cancelPlacementMode();
+        this.previewTower = null;
+        this.dragCandidate = null;
+        this.isDraggingTower = false;
+        this.pointerWorldPosition = null;
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      if (event.key === " ") {
+        this.spacePanActive = false;
+      }
     });
   }
 
-  private getWorldPosition(event: PointerEvent): Vector2 {
+  private getScreenPosition(event: Pick<PointerEvent | WheelEvent, "clientX" | "clientY">): Vector2 {
     const rect = this.canvas.getBoundingClientRect();
     const pixelRatio = window.devicePixelRatio || 1;
     const canvasScaleX = rect.width > 0 ? this.canvas.width / rect.width : pixelRatio;
     const canvasScaleY = rect.height > 0 ? this.canvas.height / rect.height : pixelRatio;
 
-    // Convert browser pointer coordinates into the same logical canvas space used by game rendering.
+    // Convert browser pointer coordinates into logical canvas screen space.
+    // Game interactions then use CameraManager.screenToWorld() so UI remains
+    // screen-space while towers, enemies, and placement stay in stable world units.
     return {
       x: (event.clientX - rect.left) * (canvasScaleX / pixelRatio),
       y: (event.clientY - rect.top) * (canvasScaleY / pixelRatio)
     };
+  }
+
+  private handleCameraMove(event: PointerEvent, screenPosition: Vector2): void {
+    if (!this.activePointers.has(event.pointerId)) return;
+
+    const previous = this.activePointers.get(event.pointerId) ?? screenPosition;
+    this.activePointers.set(event.pointerId, screenPosition);
+
+    if (this.activePointers.size >= 2) {
+      const [first, second] = Array.from(this.activePointers.values());
+      const distance = Math.hypot(second.x - first.x, second.y - first.y);
+      const midpoint = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+      if (this.lastPinchDistance > 0) {
+        this.game.zoomCameraAtScreenPoint(this.game.cameraZoom * (distance / this.lastPinchDistance), midpoint);
+      }
+      this.lastPinchDistance = distance;
+      this.isCameraGesture = true;
+      this.pendingMapPress = null;
+      return;
+    }
+
+    const pending = this.pendingMapPress;
+    if (!pending || pending.pointerId !== event.pointerId) return;
+
+    const movedDistance = Math.hypot(screenPosition.x - pending.startScreen.x, screenPosition.y - pending.startScreen.y);
+    if (movedDistance > 8) {
+      pending.moved = true;
+    }
+
+    const shouldPan =
+      pending.moved &&
+      !this.isDraggingTower &&
+      (event.pointerType === "touch" || event.button === 1 || event.buttons === 4 || this.spacePanActive);
+    if (!shouldPan) return;
+
+    this.game.panCameraByScreenDelta(screenPosition.x - previous.x, screenPosition.y - previous.y);
+    this.isCameraGesture = true;
+    pending.lastScreen = screenPosition;
+  }
+
+  private handleCanvasPointerUp(event: PointerEvent): void {
+    if (!this.activePointers.has(event.pointerId)) return;
+
+    const screenPosition = this.getScreenPosition(event);
+    this.activePointers.delete(event.pointerId);
+    if (this.activePointers.size < 2) {
+      this.lastPinchDistance = 0;
+    }
+
+    const pending = this.pendingMapPress;
+    const wasTap =
+      pending?.pointerId === event.pointerId &&
+      !pending.moved &&
+      !this.isCameraGesture &&
+      this.isInsideCanvas(event) &&
+      !this.isUiHitZone(event);
+
+    if (wasTap) {
+      this.game.handleMapPress(this.game.screenToWorld(screenPosition));
+    }
+
+    if (pending?.pointerId === event.pointerId) {
+      this.pendingMapPress = null;
+    }
+    if (this.activePointers.size === 0) {
+      this.isCameraGesture = false;
+    }
   }
 
   private isInsideCanvas(event: PointerEvent): boolean {
@@ -163,7 +274,7 @@ export class InputManager {
     return event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
   }
 
-  private isUiHitZone(event: PointerEvent): boolean {
+  private isUiHitZone(event: Pick<PointerEvent | WheelEvent, "clientX" | "clientY">): boolean {
     const element = document.elementFromPoint(event.clientX, event.clientY);
     return Boolean(
       element?.closest(

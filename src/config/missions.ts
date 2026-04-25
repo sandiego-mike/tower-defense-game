@@ -1,4 +1,4 @@
-import { MissionConfig, MissionId, MissionThemeConfig, MissionThemeId } from "../types";
+import { CameraConfig, MissionConfig, MissionId, MissionThemeConfig, MissionThemeId } from "../types";
 
 export const MISSION_ORDER: MissionId[] = ["green-pass", "desert-bend", "lava-spill"];
 
@@ -9,6 +9,19 @@ export const GENERIC_ENEMY_SPRITE_KEYS = {
   swarm: "swarm-enemy",
   boss: "boss-enemy"
 } as const;
+
+export const CAMERA_CONFIG: CameraConfig = {
+  // Gameplay lives in stable world units. Responsive canvas size and device
+  // orientation change the camera only; enemy paths and tower positions do not
+  // get recalculated from screen pixels.
+  worldWidth: 960,
+  worldHeight: 540,
+  mobileDefaultZoomMode: "fit-map",
+  minZoom: 0.25,
+  maxZoom: 2.6,
+  allowPan: true,
+  allowPinchZoom: true
+};
 
 // Mission themes control enemy visuals. Enemy behavior stays in config/enemies.ts:
 // the "basic" role keeps the same health, speed, reward, radius, and life damage

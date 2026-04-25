@@ -84,7 +84,7 @@ export class Projectile {
     ctx.restore();
   }
 
-  isFarOutsideViewport(width: number, height: number, padding: number): boolean {
+  isFarOutsideWorld(width: number, height: number, padding: number): boolean {
     return (
       this.position.x < -padding ||
       this.position.x > width + padding ||

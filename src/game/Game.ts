@@ -4,12 +4,13 @@ import { Tower } from "../entities/Tower";
 import { DIFFICULTY_CONFIGS } from "../config/difficulties";
 import { ENEMY_CONFIGS } from "../config/enemies";
 import { ECONOMY_CONFIG, SCORE_CONFIG } from "../config/economy";
-import { GENERIC_ENEMY_SPRITE_KEYS, MISSION_CONFIGS, MISSION_THEME_CONFIGS } from "../config/missions";
+import { CAMERA_CONFIG, GENERIC_ENEMY_SPRITE_KEYS, MISSION_CONFIGS, MISSION_THEME_CONFIGS } from "../config/missions";
 import { PROTOTYPE_FOREST_THEME } from "../config/theme";
 import { TOWER_CONFIGS } from "../config/towers";
 import { DEFAULT_WAVE_CONFIG } from "../config/waves";
 import { InputManager } from "../input/InputManager";
 import { AssetManager } from "../systems/AssetManager";
+import { CameraManager } from "../systems/CameraManager";
 import { EffectManager } from "../systems/EffectManager";
 import { PathManager } from "../systems/PathManager";
 import { ProgressionManager } from "../systems/ProgressionManager";
@@ -42,6 +43,7 @@ export class Game {
 
   private readonly ctx: CanvasRenderingContext2D;
   private readonly pathManager = new PathManager();
+  private readonly camera = new CameraManager(CAMERA_CONFIG);
   private readonly towers: Tower[] = [];
   private readonly enemies: Enemy[] = [];
   private readonly projectiles: Projectile[] = [];
@@ -124,6 +126,7 @@ export class Game {
       () => this.toggleEffects(),
       () => this.toggleDebugHitboxes(),
       () => this.toggleCullingBounds(),
+      () => this.resetCamera(),
       (missionId) => this.isMissionUnlocked(missionId)
     );
     this.input = new InputManager(canvas, this);
@@ -164,7 +167,8 @@ export class Game {
     this.feedbackTimer = 1.4;
     this.screenShakeTimer = 0;
     this.screenShakeIntensity = 0;
-    this.buildResponsivePath();
+    this.buildWorldPath();
+    this.resetCamera(true);
     this.updateUi();
   }
 
@@ -231,6 +235,31 @@ export class Game {
 
     this.selectedPlacedTower = null;
     this.updateUi();
+  }
+
+  screenToWorld(position: Vector2): Vector2 {
+    return this.camera.screenToWorld(position);
+  }
+
+  panCameraByScreenDelta(deltaX: number, deltaY: number): void {
+    this.camera.panByScreenDelta(deltaX, deltaY);
+  }
+
+  zoomCameraAtScreenPoint(nextZoom: number, screenPoint: Vector2): void {
+    if (!CAMERA_CONFIG.allowPinchZoom) return;
+    this.camera.zoomAtScreenPoint(nextZoom, screenPoint);
+  }
+
+  resetCamera(silent = false): void {
+    this.camera.resetToDefault(this.pathManager.getBounds());
+    if (!silent) {
+      this.showFeedback("Camera reset");
+      this.updateUi();
+    }
+  }
+
+  get cameraZoom(): number {
+    return this.camera.zoom;
   }
 
   upgradeSelectedTower(): void {
@@ -379,6 +408,7 @@ export class Game {
     this.ctx.save();
     const shakeOffset = this.getScreenShakeOffset();
     this.ctx.translate(shakeOffset.x, shakeOffset.y);
+    this.camera.applyTransform(this.ctx);
     this.drawBackground();
     this.drawPath();
 
@@ -438,21 +468,21 @@ export class Game {
     }
 
     this.ctx.fillStyle = PROTOTYPE_FOREST_THEME.backgroundColor;
-    this.ctx.fillRect(0, 0, this.width, this.height);
+    this.ctx.fillRect(0, 0, this.camera.worldWidth, this.camera.worldHeight);
 
     this.ctx.strokeStyle = PROTOTYPE_FOREST_THEME.backgroundGridColor;
     this.ctx.lineWidth = 1;
     const gridSize = 48;
-    for (let x = 0; x <= this.width; x += gridSize) {
+    for (let x = 0; x <= this.camera.worldWidth; x += gridSize) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, this.height);
+      this.ctx.lineTo(x, this.camera.worldHeight);
       this.ctx.stroke();
     }
-    for (let y = 0; y <= this.height; y += gridSize) {
+    for (let y = 0; y <= this.camera.worldHeight; y += gridSize) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.width, y);
+      this.ctx.lineTo(this.camera.worldWidth, y);
       this.ctx.stroke();
     }
     this.ctx.restore();
@@ -465,11 +495,11 @@ export class Game {
     const imageHeight = image instanceof HTMLImageElement ? image.naturalHeight : image.height;
     if (imageWidth <= 0 || imageHeight <= 0) return;
 
-    const scale = Math.max(this.width / imageWidth, this.height / imageHeight);
+    const scale = Math.max(this.camera.worldWidth / imageWidth, this.camera.worldHeight / imageHeight);
     const drawWidth = imageWidth * scale;
     const drawHeight = imageHeight * scale;
-    const drawX = (this.width - drawWidth) / 2;
-    const drawY = (this.height - drawHeight) / 2;
+    const drawX = (this.camera.worldWidth - drawWidth) / 2;
+    const drawY = (this.camera.worldHeight - drawHeight) / 2;
     this.ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
   }
 
@@ -532,19 +562,20 @@ export class Game {
     const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
 
     this.width = Math.max(320, viewportWidth);
-    this.height = Math.max(480, viewportHeight);
+    this.height = Math.max(320, viewportHeight);
     this.canvas.width = Math.floor(this.width * pixelRatio);
     this.canvas.height = Math.floor(this.height * pixelRatio);
     this.canvas.style.width = `${this.width}px`;
     this.canvas.style.height = `${this.height}px`;
     this.ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    this.buildResponsivePath();
+    this.camera.resize(this.width, this.height);
+    this.resetCamera(true);
   }
 
-  private buildResponsivePath(): void {
+  private buildWorldPath(): void {
     const mission = MISSION_CONFIGS[this.missionId];
     this.path.length = 0;
-    this.path.push(...mission.path.map((point) => ({ x: point.x * this.width, y: point.y * this.height })));
+    this.path.push(...mission.path.map((point) => ({ x: point.x * this.camera.worldWidth, y: point.y * this.camera.worldHeight })));
     this.pathManager.rebuild(this.path);
   }
 
@@ -567,7 +598,9 @@ export class Game {
     for (let index = this.projectiles.length - 1; index >= 0; index -= 1) {
       const projectile = this.projectiles[index];
       const shouldRecycle =
-        projectile.isDone || (!projectile.hasValidTarget && projectile.isFarOutsideViewport(this.width, this.height, Game.VIEWPORT_PADDING * 2));
+        projectile.isDone ||
+        (!projectile.hasValidTarget &&
+          projectile.isFarOutsideWorld(this.camera.worldWidth, this.camera.worldHeight, Game.VIEWPORT_PADDING * 2));
       if (shouldRecycle) {
         this.projectilePool.push(this.projectiles[index]);
         const lastProjectile = this.projectiles.pop();
@@ -746,7 +779,8 @@ export class Game {
   }
 
   private validateTowerPlacement(position: Vector2, towerType: TowerType): { canPlace: boolean; reason: string } {
-    const insideMap = position.x >= 18 && position.y >= 18 && position.x <= this.width - 18 && position.y <= this.height - 18;
+    const insideMap =
+      position.x >= 18 && position.y >= 18 && position.x <= this.camera.worldWidth - 18 && position.y <= this.camera.worldHeight - 18;
     if (!insideMap) {
       return { canPlace: false, reason: "Place towers inside the map." };
     }
@@ -832,7 +866,7 @@ export class Game {
   }
 
   private isCircleInViewport(x: number, y: number, radius: number, padding: number): boolean {
-    return x + radius >= -padding && x - radius <= this.width + padding && y + radius >= -padding && y - radius <= this.height + padding;
+    return this.camera.isCircleVisible(x, y, radius, padding);
   }
 
   private isProjectileInViewport(projectile: Projectile, padding: number): boolean {
@@ -847,7 +881,8 @@ export class Game {
     this.ctx.strokeStyle = "rgba(45, 212, 191, 0.85)";
     this.ctx.lineWidth = 2;
     this.ctx.setLineDash([8, 6]);
-    this.ctx.strokeRect(-Game.VIEWPORT_PADDING, -Game.VIEWPORT_PADDING, this.width + Game.VIEWPORT_PADDING * 2, this.height + Game.VIEWPORT_PADDING * 2);
+    const bounds = this.camera.getViewportWorldBounds(Game.VIEWPORT_PADDING);
+    this.ctx.strokeRect(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
     this.ctx.restore();
   }
 
@@ -879,7 +914,8 @@ export class Game {
       path: {
         totalLength: Math.round(this.pathManager.totalDistance),
         hoveredEnemyProgress: this.input.pointerWorldPosition ? this.findEnemyAt(this.input.pointerWorldPosition)?.normalizedPathProgress ?? null : null,
-        hoveredEnemySegment: this.input.pointerWorldPosition ? this.findEnemyAt(this.input.pointerWorldPosition)?.currentSegmentIndex ?? null : null
+        hoveredEnemySegment: this.input.pointerWorldPosition ? this.findEnemyAt(this.input.pointerWorldPosition)?.currentSegmentIndex ?? null : null,
+        cameraZoom: this.camera.zoom
       },
       currentMultipliers: {
         health: difficulty.enemyHealthMultiplier,

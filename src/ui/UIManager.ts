@@ -234,6 +234,7 @@ export class UIManager {
   private readonly messageResumeButton = document.querySelector<HTMLButtonElement>("#message-resume-button");
   private readonly messageRestartButton = document.querySelector<HTMLButtonElement>("#message-restart-button");
   private readonly messageMenuButton = document.querySelector<HTMLButtonElement>("#message-menu-button");
+  private readonly messageResetCameraButton = document.querySelector<HTMLButtonElement>("#message-reset-camera-button");
   private readonly messageSkipWaveButton = document.querySelector<HTMLButtonElement>("#message-skip-wave-button");
   private readonly messageDebugButton = document.querySelector<HTMLButtonElement>("#message-debug-button");
   private readonly towerButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".tower-button"));
@@ -261,6 +262,7 @@ export class UIManager {
     onToggleEffects: () => void,
     onToggleDebugHitboxes: () => void,
     onToggleCullingBounds: () => void,
+    onResetCamera: () => void,
     private readonly isMissionUnlocked: (missionId: MissionId) => boolean
   ) {
     this.populateSelects();
@@ -279,7 +281,8 @@ export class UIManager {
       onToggleHealthBars,
       onToggleEffects,
       onToggleDebugHitboxes,
-      onToggleCullingBounds
+      onToggleCullingBounds,
+      onResetCamera
     );
 
     this.missionSelect?.addEventListener("change", () => this.updateMissionDescription());
@@ -522,6 +525,7 @@ export class UIManager {
     this.messageResumeButton?.classList.toggle("hidden", state !== "paused");
     this.messageRestartButton?.classList.toggle("hidden", state === "menu");
     this.messageMenuButton?.classList.toggle("hidden", state === "menu");
+    this.messageResetCameraButton?.classList.toggle("hidden", state === "menu");
     this.messageSkipWaveButton?.classList.toggle("hidden", !debugBalanceInfo.enabled || state !== "paused");
     this.messageDebugButton?.classList.toggle("hidden", !this.showDebugControls || state !== "paused");
     if (this.messageDebugButton) {
@@ -550,7 +554,7 @@ export class UIManager {
       `Rendered E ${performance.renderedEnemies}/${performance.enemies} | P ${performance.renderedProjectiles}/${performance.projectiles} | FX ${performance.renderedEffects}/${performance.effects}`,
       `Culled E ${performance.culledEnemies} | P ${performance.culledProjectiles} | FX ${performance.culledEffects}`,
       `Render health ${toggles.healthBars ? "on" : "off"} | effects ${toggles.effects ? "on" : "off"} | hitboxes ${toggles.hitboxes ? "on" : "off"} | cull ${toggles.cullingBounds ? "on" : "off"}`,
-      `Path ${path.totalLength}px | Hover ${hoveredProgress}`,
+      `Path ${path.totalLength}px | Hover ${hoveredProgress} | Camera ${path.cameraZoom.toFixed(2)}x`,
       `Multipliers H ${multipliers.health} | S ${multipliers.speed} | C ${multipliers.count} | R ${multipliers.rewards} | Spawn ${multipliers.spawnInterval}`,
       `Wave ${currentWave.waveNumber}: ${currentWave.label} | ${currentWave.totalEnemies} enemies | ${currentWave.totalHealth} HP | ${currentWave.goldIncome} gold`,
       `Types ${enemyTypes}`,
@@ -607,7 +611,8 @@ export class UIManager {
     onToggleHealthBars: () => void,
     onToggleEffects: () => void,
     onToggleDebugHitboxes: () => void,
-    onToggleCullingBounds: () => void
+    onToggleCullingBounds: () => void,
+    onResetCamera: () => void
   ): void {
     this.controlRegistry.registerButton(this.startButton, "start", "Start", () => onStart(this.selectedMissionId, this.selectedDifficultyId));
     this.controlRegistry.registerButton(this.pauseButton, "pause", "Pause", onPause);
@@ -626,6 +631,7 @@ export class UIManager {
     this.controlRegistry.registerButton(this.messageResumeButton, "resume", "Resume", onResume);
     this.controlRegistry.registerButton(this.messageRestartButton, "restart", "Restart", onRestart);
     this.controlRegistry.registerButton(this.messageMenuButton, "mission-menu", "Mission Select", onReturnToMenu);
+    this.controlRegistry.registerButton(this.messageResetCameraButton, "reset-camera", "Reset Camera", onResetCamera);
     this.controlRegistry.registerButton(this.messageSkipWaveButton, "skip-wave", "Skip Wave", onSkipWave);
     this.controlRegistry.registerButton(this.messageDebugButton, "toggle-debug", "Debug", onToggleDebug);
     this.controlRegistry.registerButton(this.debugHealthBarsButton, "debug-health-bars", "Health Bars", onToggleHealthBars);

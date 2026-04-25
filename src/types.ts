@@ -106,6 +106,7 @@ export type DebugBalanceInfo = {
     totalLength: number;
     hoveredEnemyProgress: number | null;
     hoveredEnemySegment: number | null;
+    cameraZoom: number;
   };
   currentMultipliers: {
     health: number;
@@ -192,6 +193,18 @@ export type MissionConfig = {
   themeId: MissionThemeId;
   backgroundImageKey?: string;
   path: Vector2[];
+};
+
+export type CameraZoomMode = "fit-path" | "fit-map";
+
+export type CameraConfig = {
+  worldWidth: number;
+  worldHeight: number;
+  mobileDefaultZoomMode: CameraZoomMode;
+  minZoom: number;
+  maxZoom: number;
+  allowPan: boolean;
+  allowPinchZoom: boolean;
 };
 
 export type EnemySpriteKeyMap = Record<EnemyType, string>;

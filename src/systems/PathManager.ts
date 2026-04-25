@@ -1,4 +1,5 @@
 import { Vector2, clamp, distanceSquared } from "../types";
+import type { CameraBounds } from "./CameraManager";
 
 export type PathSegment = {
   start: Vector2;
@@ -48,6 +49,24 @@ export class PathManager {
 
   getSegment(index: number): PathSegment | undefined {
     return this.segments[index];
+  }
+
+  getBounds(): CameraBounds | undefined {
+    if (this.points.length === 0) return undefined;
+
+    let minX = this.points[0].x;
+    let minY = this.points[0].y;
+    let maxX = this.points[0].x;
+    let maxY = this.points[0].y;
+
+    for (const point of this.points) {
+      minX = Math.min(minX, point.x);
+      minY = Math.min(minY, point.y);
+      maxX = Math.max(maxX, point.x);
+      maxY = Math.max(maxY, point.y);
+    }
+
+    return { minX, minY, maxX, maxY };
   }
 
   distanceToPath(point: Vector2): number {
