@@ -1,6 +1,6 @@
 import { DIFFICULTY_CONFIGS } from "../config/difficulties";
 import { ENEMY_CONFIGS } from "../config/enemies";
-import { MISSION_CONFIGS } from "../config/missions";
+import { MISSION_CONFIGS, MISSION_THEME_CONFIGS } from "../config/missions";
 import { TOWER_CONFIGS } from "../config/towers";
 import {
   DebugBalanceInfo,
@@ -37,6 +37,8 @@ interface UIElementModel {
   visible: boolean;
   enabled: boolean;
 }
+
+type DashboardView = "main" | "missions" | "settings" | "howto";
 
 class UIControlRegistry {
   private readonly buttons = new Map<string, { model: UIButtonModel; element: HTMLButtonElement; overlay: HTMLDivElement }>();
@@ -192,7 +194,27 @@ class UIControlRegistry {
 }
 
 export class UIManager {
+  private static readonly DEFAULT_DIFFICULTY_KEY = "tower-defense-default-difficulty";
+
   private readonly startScreen = document.querySelector<HTMLElement>("#start-screen");
+  private readonly dashboardMain = document.querySelector<HTMLElement>("#dashboard-main");
+  private readonly dashboardMissions = document.querySelector<HTMLElement>("#dashboard-missions");
+  private readonly dashboardSettings = document.querySelector<HTMLElement>("#dashboard-settings");
+  private readonly dashboardHowto = document.querySelector<HTMLElement>("#dashboard-howto");
+  private readonly dashboardMainStatus = document.querySelector<HTMLElement>("#dashboard-main-status");
+  private readonly dashboardMissionsButton = document.querySelector<HTMLButtonElement>("#dashboard-missions-button");
+  private readonly dashboardSettingsButton = document.querySelector<HTMLButtonElement>("#dashboard-settings-button");
+  private readonly dashboardHowtoButton = document.querySelector<HTMLButtonElement>("#dashboard-howto-button");
+  private readonly dashboardExitButton = document.querySelector<HTMLButtonElement>("#dashboard-exit-button");
+  private readonly dashboardMissionsBackButton = document.querySelector<HTMLButtonElement>("#dashboard-missions-back-button");
+  private readonly dashboardSettingsBackButton = document.querySelector<HTMLButtonElement>("#dashboard-settings-back-button");
+  private readonly dashboardHowtoBackButton = document.querySelector<HTMLButtonElement>("#dashboard-howto-back-button");
+  private readonly missionCardGrid = document.querySelector<HTMLElement>("#mission-card-grid");
+  private readonly missionStartButton = document.querySelector<HTMLButtonElement>("#mission-start-button");
+  private readonly settingsSoundButton = document.querySelector<HTMLButtonElement>("#settings-sound-button");
+  private readonly settingsDifficultySelect = document.querySelector<HTMLSelectElement>("#settings-difficulty-select");
+  private readonly settingsResetProgressButton = document.querySelector<HTMLButtonElement>("#settings-reset-progress-button");
+  private readonly settingsStatus = document.querySelector<HTMLElement>("#settings-status");
   private readonly hud = document.querySelector<HTMLElement>("#hud");
   private readonly towerPalette = document.querySelector<HTMLElement>("#tower-palette");
   private readonly missionSelect = document.querySelector<HTMLSelectElement>("#mission-select");
@@ -245,6 +267,10 @@ export class UIManager {
   private missionInfos: MissionSelectInfo[] = [];
   private waveInfoOpen = false;
   private lastKnownState: GameState = "menu";
+  private lastSoundMuted = false;
+  private dashboardView: DashboardView = "main";
+  private dashboardMainStatusMessage = "";
+  private settingsStatusMessage = "";
 
   constructor(
     onStart: (missionId: MissionId, difficultyId: DifficultyId) => void,
@@ -265,6 +291,7 @@ export class UIManager {
     onToggleCullingBounds: () => void,
     onResetCamera: () => void,
     onToggleMute: () => void,
+    onResetProgress: () => void,
     private readonly isMissionUnlocked: (missionId: MissionId) => boolean
   ) {
     this.populateSelects();
@@ -285,7 +312,8 @@ export class UIManager {
       onToggleDebugHitboxes,
       onToggleCullingBounds,
       onResetCamera,
-      onToggleMute
+      onToggleMute,
+      onResetProgress
     );
 
     this.missionSelect?.addEventListener("change", () => this.updateMissionDescription());
@@ -294,6 +322,10 @@ export class UIManager {
     });
     this.speedSelect?.addEventListener("change", () => {
       onSetGameSpeed(Number(this.speedSelect?.value ?? 1));
+    });
+    this.settingsDifficultySelect?.addEventListener("change", () => {
+      this.setDefaultDifficulty(this.settingsDifficultySelect?.value as DifficultyId);
+      this.renderSettings(this.lastSoundMuted);
     });
     window.addEventListener("resize", () => this.controlRegistry.syncAll());
   }
@@ -320,9 +352,11 @@ export class UIManager {
     soundMuted: boolean
   ): void {
     this.lastKnownState = state;
+    this.lastSoundMuted = soundMuted;
     this.missionInfos = missionInfos;
     this.renderMissionOptions();
     this.updateMissionDescription();
+    this.renderDashboard(state, soundMuted);
 
     if (this.lifeValue) this.lifeValue.textContent = `${life} / ${maxLife}`;
     if (this.goldValue) this.goldValue.textContent = infiniteGold ? "∞" : String(gold);
@@ -384,7 +418,14 @@ export class UIManager {
       this.difficultySelect.innerHTML = Object.values(DIFFICULTY_CONFIGS)
         .map((difficulty) => `<option value="${difficulty.id}">${difficulty.label}</option>`)
         .join("");
-      this.difficultySelect.value = "normal";
+      this.difficultySelect.value = this.getDefaultDifficulty();
+    }
+
+    if (this.settingsDifficultySelect) {
+      this.settingsDifficultySelect.innerHTML = Object.values(DIFFICULTY_CONFIGS)
+        .map((difficulty) => `<option value="${difficulty.id}">${difficulty.label}</option>`)
+        .join("");
+      this.settingsDifficultySelect.value = this.getDefaultDifficulty();
     }
 
     if (this.targetingSelect) {
@@ -418,10 +459,107 @@ export class UIManager {
       }
     }
 
-    if (this.startButton) {
-      this.startButton.disabled = locked;
-      this.startButton.textContent = locked ? "Locked" : "Start Game";
+    if (this.missionStartButton) {
+      this.missionStartButton.disabled = locked;
+      this.missionStartButton.textContent = locked ? "Mission Locked" : "Start Mission";
     }
+  }
+
+  private renderDashboard(state: GameState, soundMuted: boolean): void {
+    if (state !== "menu") return;
+
+    this.dashboardMain?.classList.toggle("hidden", this.dashboardView !== "main");
+    this.dashboardMissions?.classList.toggle("hidden", this.dashboardView !== "missions");
+    this.dashboardSettings?.classList.toggle("hidden", this.dashboardView !== "settings");
+    this.dashboardHowto?.classList.toggle("hidden", this.dashboardView !== "howto");
+    if (this.dashboardMainStatus) {
+      this.dashboardMainStatus.textContent = this.dashboardMainStatusMessage;
+    }
+    this.renderMissionCards();
+    this.renderSettings(soundMuted);
+  }
+
+  private renderMissionCards(): void {
+    if (!this.missionCardGrid) return;
+
+    this.missionCardGrid.innerHTML = this.missionInfos
+      .map((info) => {
+        const mission = MISSION_CONFIGS[info.id];
+        const theme = MISSION_THEME_CONFIGS[mission.themeId];
+        const selected = info.id === this.selectedMissionId;
+        const status = info.locked ? "Locked" : info.completed ? "Completed" : "Unlocked";
+        const stars = info.bestStars > 0 ? "★".repeat(info.bestStars) : "No stars yet";
+        const score = info.bestScore > 0 ? String(info.bestScore) : "-";
+
+        return `
+          <button class="mission-card ${selected ? "selected" : ""} ${info.locked ? "locked" : ""}" data-mission="${info.id}" type="button" ${
+            info.locked ? "disabled" : ""
+          }>
+            <div>
+              <strong>${mission.label}</strong>
+              <span>${theme.label} map</span>
+            </div>
+            <div class="mission-card-meta">
+              <span>${status}</span>
+              <span>Best ${score}</span>
+              <span>${stars}</span>
+            </div>
+          </button>
+        `;
+      })
+      .join("");
+
+    for (const card of Array.from(this.missionCardGrid.querySelectorAll<HTMLButtonElement>(".mission-card"))) {
+      card.addEventListener("click", () => {
+        const missionId = card.dataset.mission as MissionId | undefined;
+        if (!missionId || card.disabled) return;
+        if (this.missionSelect) this.missionSelect.value = missionId;
+        this.updateMissionDescription();
+        this.renderMissionCards();
+      });
+    }
+  }
+
+  private renderSettings(soundMuted: boolean): void {
+    if (this.settingsSoundButton) {
+      this.settingsSoundButton.textContent = soundMuted ? "Sound Muted" : "Sound On";
+    }
+    if (this.settingsDifficultySelect) {
+      this.settingsDifficultySelect.value = this.getDefaultDifficulty();
+    }
+    if (this.settingsStatus) {
+      this.settingsStatus.textContent = this.settingsStatusMessage;
+    }
+  }
+
+  private showDashboardView(view: DashboardView): void {
+    this.dashboardView = view;
+    this.dashboardMainStatusMessage = "";
+    this.settingsStatusMessage = "";
+    this.renderDashboard(this.lastKnownState, this.lastSoundMuted);
+    this.controlRegistry.syncAll();
+  }
+
+  private getDefaultDifficulty(): DifficultyId {
+    try {
+      const saved = window.localStorage.getItem(UIManager.DEFAULT_DIFFICULTY_KEY) as DifficultyId | null;
+      return saved && DIFFICULTY_CONFIGS[saved] ? saved : "normal";
+    } catch {
+      return "normal";
+    }
+  }
+
+  private setDefaultDifficulty(difficultyId: DifficultyId): void {
+    if (!DIFFICULTY_CONFIGS[difficultyId]) return;
+    try {
+      window.localStorage.setItem(UIManager.DEFAULT_DIFFICULTY_KEY, difficultyId);
+    } catch {
+      // Ignore blocked storage; the active selector still changes for this session.
+    }
+    if (this.difficultySelect) {
+      this.difficultySelect.value = difficultyId;
+    }
+    this.settingsStatusMessage = `Default difficulty set to ${DIFFICULTY_CONFIGS[difficultyId].label}.`;
   }
 
   private renderTowerInspector(selectedTowerInfo: SelectedTowerInfo | null, state: GameState, gold: number, infiniteGold: boolean): void {
@@ -637,9 +775,31 @@ export class UIManager {
     onToggleDebugHitboxes: () => void,
     onToggleCullingBounds: () => void,
     onResetCamera: () => void,
-    onToggleMute: () => void
+    onToggleMute: () => void,
+    onResetProgress: () => void
   ): void {
-    this.controlRegistry.registerButton(this.startButton, "start", "Start", () => onStart(this.selectedMissionId, this.selectedDifficultyId));
+    this.controlRegistry.registerButton(this.startButton, "dashboard-start", "Start Game", () => this.showDashboardView("missions"));
+    this.controlRegistry.registerButton(this.dashboardMissionsButton, "dashboard-missions", "Missions", () => this.showDashboardView("missions"));
+    this.controlRegistry.registerButton(this.dashboardSettingsButton, "dashboard-settings", "Settings", () => this.showDashboardView("settings"));
+    this.controlRegistry.registerButton(this.dashboardHowtoButton, "dashboard-howto", "How to Play", () => this.showDashboardView("howto"));
+    this.controlRegistry.registerButton(this.dashboardExitButton, "dashboard-exit", "Exit", () => {
+      this.showDashboardView("main");
+      this.dashboardMainStatusMessage = "Exit is not available in browser mode.";
+      this.renderDashboard(this.lastKnownState, this.lastSoundMuted);
+    });
+    this.controlRegistry.registerButton(this.dashboardMissionsBackButton, "dashboard-missions-back", "Back", () => this.showDashboardView("main"));
+    this.controlRegistry.registerButton(this.dashboardSettingsBackButton, "dashboard-settings-back", "Back", () => this.showDashboardView("main"));
+    this.controlRegistry.registerButton(this.dashboardHowtoBackButton, "dashboard-howto-back", "Back", () => this.showDashboardView("main"));
+    this.controlRegistry.registerButton(this.missionStartButton, "mission-start", "Start Mission", () => onStart(this.selectedMissionId, this.selectedDifficultyId));
+    this.controlRegistry.registerButton(this.settingsSoundButton, "settings-sound", "Toggle Sound", onToggleMute);
+    this.controlRegistry.registerButton(this.settingsResetProgressButton, "settings-reset-progress", "Reset Progress", () => {
+      if (!window.confirm("Reset all mission progress?")) return;
+      onResetProgress();
+      this.settingsStatusMessage = "Progress reset.";
+      this.renderMissionOptions();
+      this.updateMissionDescription();
+      this.renderMissionCards();
+    });
     this.controlRegistry.registerButton(this.pauseButton, "pause", "Pause", onPause);
     this.controlRegistry.registerButton(this.soundToggleButton, "sound-toggle", "Mute Sound", onToggleMute);
     this.controlRegistry.registerButton(this.waveInfoButton, "wave-info", "Wave Details", () => {

@@ -132,6 +132,7 @@ export class Game {
       () => this.toggleCullingBounds(),
       () => this.resetCamera(),
       () => this.toggleMute(),
+      () => this.resetProgress(),
       (missionId) => this.isMissionUnlocked(missionId)
     );
     this.input = new InputManager(canvas, this);
@@ -766,6 +767,12 @@ export class Game {
     this.sound.unlock();
     this.sound.toggleMuted();
     this.showFeedback(this.sound.isMuted ? "Sound muted" : "Sound on");
+    this.updateUi();
+  }
+
+  private resetProgress(): void {
+    this.progression.reset();
+    this.showFeedback("Progress reset");
     this.updateUi();
   }
 

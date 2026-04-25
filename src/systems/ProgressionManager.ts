@@ -43,6 +43,14 @@ export class ProgressionManager {
     this.save();
   }
 
+  reset(): void {
+    this.saveData = {
+      version: 1,
+      missions: {}
+    };
+    this.save();
+  }
+
   private isMissionUnlocked(missionId: MissionId, index: number): boolean {
     if (index <= 0) return true;
     if (this.getRecord(missionId).completed) return true;

@@ -90,17 +90,72 @@
       </div>
 
       <div id="start-screen" class="start-screen">
-        <section class="start-panel" aria-label="Game setup">
-          <h1>Tower Defense MVP</h1>
-          <label for="mission-select">Mission</label>
-          <select id="mission-select"></select>
-          <p id="mission-description" class="mission-description"></p>
-          <p id="mission-progress" class="mission-description"></p>
+        <section class="dashboard-panel" aria-label="Main menu">
+          <div id="dashboard-main" class="dashboard-view">
+            <p class="dashboard-kicker">Mobile Defense Command</p>
+            <h1>Tower Defense MVP</h1>
+            <div class="dashboard-actions">
+              <button id="start-button" class="dashboard-button primary" type="button">Start Game</button>
+              <button id="dashboard-missions-button" class="dashboard-button" type="button">Missions</button>
+              <button id="dashboard-settings-button" class="dashboard-button" type="button">Settings</button>
+              <button id="dashboard-howto-button" class="dashboard-button" type="button">How to Play</button>
+              <button id="dashboard-exit-button" class="dashboard-button quiet" type="button">Exit / Back</button>
+            </div>
+            <p id="dashboard-main-status" class="mission-description"></p>
+          </div>
 
-          <label for="difficulty-select">Difficulty</label>
-          <select id="difficulty-select"></select>
+          <div id="dashboard-missions" class="dashboard-view hidden">
+            <div class="dashboard-header-row">
+              <div>
+                <p class="dashboard-kicker">Choose Mission</p>
+                <h2>Missions</h2>
+              </div>
+              <button id="dashboard-missions-back-button" class="dashboard-back-button" type="button">Back</button>
+            </div>
+            <div id="mission-card-grid" class="mission-card-grid" aria-label="Mission list"></div>
+            <label class="dashboard-field" for="difficulty-select">
+              <span>Difficulty</span>
+              <select id="difficulty-select"></select>
+            </label>
+            <select id="mission-select" class="hidden" aria-hidden="true"></select>
+            <p id="mission-description" class="mission-description"></p>
+            <p id="mission-progress" class="mission-description"></p>
+            <button id="mission-start-button" class="dashboard-button primary" type="button">Start Mission</button>
+          </div>
 
-          <button id="start-button" class="start-button" type="button">Start Game</button>
+          <div id="dashboard-settings" class="dashboard-view hidden">
+            <div class="dashboard-header-row">
+              <div>
+                <p class="dashboard-kicker">Tune Your Run</p>
+                <h2>Settings</h2>
+              </div>
+              <button id="dashboard-settings-back-button" class="dashboard-back-button" type="button">Back</button>
+            </div>
+            <button id="settings-sound-button" class="dashboard-button" type="button">Sound On</button>
+            <label class="dashboard-field" for="settings-difficulty-select">
+              <span>Default Difficulty</span>
+              <select id="settings-difficulty-select"></select>
+            </label>
+            <button id="settings-reset-progress-button" class="dashboard-button danger" type="button">Reset Progress</button>
+            <p id="settings-status" class="mission-description"></p>
+          </div>
+
+          <div id="dashboard-howto" class="dashboard-view hidden">
+            <div class="dashboard-header-row">
+              <div>
+                <p class="dashboard-kicker">Field Guide</p>
+                <h2>How to Play</h2>
+              </div>
+              <button id="dashboard-howto-back-button" class="dashboard-back-button" type="button">Back</button>
+            </div>
+            <ul class="howto-list">
+              <li>Choose a tower from the bottom bar.</li>
+              <li>Place towers off the enemy path.</li>
+              <li>Stop enemies before they reach the end.</li>
+              <li>Tap placed towers to upgrade or sell them.</li>
+              <li>Survive all waves to win.</li>
+            </ul>
+          </div>
         </section>
       </div>
 
