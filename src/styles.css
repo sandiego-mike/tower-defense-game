@@ -167,21 +167,23 @@ select {
 .start-screen,
 .loading-screen {
   position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100vw;
+  height: 100vh;
   height: var(--visual-viewport-height, 100vh);
   max-height: var(--visual-viewport-height, 100vh);
-  padding:
-    calc(env(safe-area-inset-top) + 8px)
-    calc(env(safe-area-inset-right) + 8px)
-    calc(env(safe-area-inset-bottom) + 8px)
-    calc(env(safe-area-inset-left) + 8px);
+  padding-top: calc(env(safe-area-inset-top) + 8px);
+  padding-right: calc(env(safe-area-inset-right) + 8px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+  padding-left: calc(env(safe-area-inset-left) + 8px);
   overflow: hidden;
   background: rgba(8, 13, 20, 0.52);
   overscroll-behavior: none;
-  touch-action: none;
+  touch-action: pan-y;
   z-index: 18;
 }
 
@@ -191,11 +193,15 @@ select {
 
 .start-panel {
   width: min(var(--start-panel-width, 420px), 100%);
+  max-width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px);
+  min-height: 0;
+  max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
   max-height: calc(
     var(--visual-viewport-height, 100vh) - var(--safe-area-top, env(safe-area-inset-top)) -
       var(--safe-area-bottom, env(safe-area-inset-bottom)) - 16px
   );
   padding: var(--start-panel-padding, 18px);
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 1px solid rgba(255, 255, 255, 0.16);
