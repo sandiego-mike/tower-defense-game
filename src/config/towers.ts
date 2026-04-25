@@ -2,7 +2,7 @@ import { TowerConfig, TowerType } from "../types";
 
 export const TOWER_CONFIGS: Record<TowerType, TowerConfig> = {
   basic: {
-    label: "Canon",
+    label: "Cannon",
     color: "#4f8cff",
     // Efficient single-target baseline. Keep this useful, but not best at every job.
     placementCost: 55,
