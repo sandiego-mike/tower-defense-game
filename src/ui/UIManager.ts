@@ -359,6 +359,9 @@ export class UIManager {
     if (!this.message) return;
     this.message.classList.toggle("hidden", state === "playing" || state === "menu");
     this.renderMessage(state, runResult, debugBalanceInfo);
+    // Message buttons change visibility inside renderMessage(). Sync after that
+    // so the reusable UI button hitboxes match the visible pause menu controls.
+    this.controlRegistry.syncAll();
   }
 
   private get selectedMissionId(): MissionId {

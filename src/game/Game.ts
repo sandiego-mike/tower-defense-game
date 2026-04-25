@@ -36,6 +36,8 @@ import {
 } from "../types";
 
 export class Game {
+  private static readonly LOGICAL_WIDTH = 1536;
+  private static readonly LOGICAL_HEIGHT = 864;
   private static readonly VIEWPORT_PADDING = 100;
 
   readonly path: Vector2[] = [];
@@ -89,6 +91,7 @@ export class Game {
   private showEffects = true;
   private showDebugHitboxes = false;
   private showCullingBounds = false;
+  private resizeTimer = 0;
   private readonly renderStats = {
     renderedEnemies: 0,
     culledEnemies: 0,
@@ -132,9 +135,9 @@ export class Game {
     );
     this.input = new InputManager(canvas, this);
     this.resize();
-    window.addEventListener("resize", () => this.resize());
-    window.addEventListener("orientationchange", () => this.resize());
-    window.visualViewport?.addEventListener("resize", () => this.resize());
+    window.addEventListener("resize", () => this.scheduleResize());
+    window.addEventListener("orientationchange", () => this.scheduleResize());
+    window.visualViewport?.addEventListener("resize", () => this.scheduleResize());
   }
 
   start(): void {
@@ -571,12 +574,12 @@ export class Game {
   private resize(): void {
     const pixelRatio = window.devicePixelRatio || 1;
     this.pixelRatio = pixelRatio;
-    const canvasRect = this.canvas.getBoundingClientRect();
-    const viewportWidth = canvasRect.width || window.innerWidth;
-    const viewportHeight = canvasRect.height || window.innerHeight;
 
-    this.width = Math.max(320, viewportWidth);
-    this.height = Math.max(320, viewportHeight);
+    // Gameplay stays in a fixed logical 16:9 surface. CSS scales the canvas to
+    // fit phones/tablets, while path points, tower positions, and enemy movement
+    // remain stable across Safari UI and orientation changes.
+    this.width = Game.LOGICAL_WIDTH;
+    this.height = Game.LOGICAL_HEIGHT;
     this.canvas.width = Math.floor(this.width * pixelRatio);
     this.canvas.height = Math.floor(this.height * pixelRatio);
     this.canvas.style.width = `${this.width}px`;
@@ -584,9 +587,14 @@ export class Game {
     this.ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     this.camera.resize(this.width, this.height);
     this.resetCamera(true);
-    if (!CAMERA_CONFIG.useCameraManager) {
+    if (!CAMERA_CONFIG.useCameraManager && this.path.length === 0) {
       this.buildPath();
     }
+  }
+
+  private scheduleResize(): void {
+    window.clearTimeout(this.resizeTimer);
+    this.resizeTimer = window.setTimeout(() => this.resize(), 100);
   }
 
   private buildPath(): void {
