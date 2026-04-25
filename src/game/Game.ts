@@ -36,8 +36,6 @@ import {
 } from "../types";
 
 export class Game {
-  private static readonly LOGICAL_WIDTH = 1536;
-  private static readonly LOGICAL_HEIGHT = 864;
   private static readonly VIEWPORT_PADDING = 100;
 
   readonly path: Vector2[] = [];
@@ -574,20 +572,20 @@ export class Game {
   private resize(): void {
     const pixelRatio = window.devicePixelRatio || 1;
     this.pixelRatio = pixelRatio;
+    this.canvas.style.width = "100%";
+    this.canvas.style.height = "100%";
+    const canvasRect = this.canvas.getBoundingClientRect();
+    const viewportWidth = canvasRect.width || window.innerWidth;
+    const viewportHeight = canvasRect.height || window.innerHeight;
 
-    // Gameplay stays in a fixed logical 16:9 surface. CSS scales the canvas to
-    // fit phones/tablets, while path points, tower positions, and enemy movement
-    // remain stable across Safari UI and orientation changes.
-    this.width = Game.LOGICAL_WIDTH;
-    this.height = Game.LOGICAL_HEIGHT;
+    this.width = Math.max(320, viewportWidth);
+    this.height = Math.max(320, viewportHeight);
     this.canvas.width = Math.floor(this.width * pixelRatio);
     this.canvas.height = Math.floor(this.height * pixelRatio);
-    this.canvas.style.width = `${this.width}px`;
-    this.canvas.style.height = `${this.height}px`;
     this.ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     this.camera.resize(this.width, this.height);
     this.resetCamera(true);
-    if (!CAMERA_CONFIG.useCameraManager && this.path.length === 0) {
+    if (!CAMERA_CONFIG.useCameraManager) {
       this.buildPath();
     }
   }

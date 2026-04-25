@@ -8,7 +8,7 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
-  min-height: 100dvh;
+  min-height: 100vh;
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
@@ -20,11 +20,6 @@ body {
   user-select: none;
   -webkit-text-size-adjust: 100%;
   -webkit-touch-callout: none;
-}
-
-body {
-  display: grid;
-  place-items: center;
 }
 
 button {
@@ -47,25 +42,22 @@ select {
 #game-shell {
   position: fixed;
   inset: 0;
-  display: grid;
-  width: var(--visual-viewport-width, 100vw);
-  height: var(--visual-viewport-height, 100dvh);
-  place-items: center;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  width: 100vw;
+  height: 100vh;
+  height: var(--visual-viewport-height, 100vh);
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: none;
 }
 
 #app {
-  position: relative;
-  width: var(--game-width, 1536px);
-  height: var(--game-height, 864px);
+  position: absolute;
+  inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  width: auto;
+  height: auto;
+  min-height: 320px;
   overflow: hidden;
   background: #101820;
-  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.38);
-  transform: scale(var(--game-scale, 1));
-  transform-origin: center center;
   touch-action: none;
 }
 
@@ -73,8 +65,9 @@ select {
   position: absolute;
   inset: 0;
   display: block;
-  width: var(--game-width, 1536px);
-  height: var(--game-height, 864px);
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
   touch-action: none;
 }
 
@@ -697,6 +690,25 @@ select {
   border-color: rgba(148, 163, 184, 0.95);
   background: rgba(148, 163, 184, 0.08);
   color: #e2e8f0;
+}
+
+.viewport-debug-overlay {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 60;
+  width: min(420px, calc(100vw - 16px));
+  max-height: min(72vh, 620px);
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid rgba(125, 211, 252, 0.5);
+  border-radius: 8px;
+  background: rgba(8, 13, 20, 0.92);
+  color: #e0f2fe;
+  font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  pointer-events: none;
+  white-space: pre-wrap;
 }
 
 .hidden {
