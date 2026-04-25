@@ -74,6 +74,7 @@ export class Game {
   private lastTime = 0;
   private width = 960;
   private height = 540;
+  private pixelRatio = 1;
   private animationId = 0;
   private feedbackMessage = "";
   private feedbackTimer = 0;
@@ -404,6 +405,7 @@ export class Game {
 
   private draw(): void {
     this.resetRenderStats();
+    this.ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
     this.ctx.clearRect(0, 0, this.width, this.height);
     this.ctx.save();
     const shakeOffset = this.getScreenShakeOffset();
@@ -450,6 +452,9 @@ export class Game {
       this.renderStats.culledEffects = effectStats.culled;
     }
     this.drawPlacementPreview();
+    if (this.debugMode) {
+      this.drawWorldDebugOverlay();
+    }
     if (this.debugMode && this.showCullingBounds) {
       this.drawCullingBounds();
     }
@@ -558,6 +563,7 @@ export class Game {
 
   private resize(): void {
     const pixelRatio = window.devicePixelRatio || 1;
+    this.pixelRatio = pixelRatio;
     const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
     const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
 
@@ -886,8 +892,33 @@ export class Game {
     this.ctx.restore();
   }
 
+  private drawWorldDebugOverlay(): void {
+    this.ctx.save();
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeStyle = "rgba(250, 204, 21, 0.9)";
+    this.ctx.setLineDash([10, 8]);
+    this.ctx.strokeRect(0, 0, this.camera.worldWidth, this.camera.worldHeight);
+    this.ctx.setLineDash([]);
+
+    this.ctx.fillStyle = "rgba(59, 130, 246, 0.95)";
+    for (const point of this.path) {
+      this.ctx.beginPath();
+      this.ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+
+    this.ctx.fillStyle = "rgba(239, 68, 68, 0.95)";
+    for (const enemy of this.enemies) {
+      this.ctx.beginPath();
+      this.ctx.arc(enemy.position.x, enemy.position.y, 4, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+    this.ctx.restore();
+  }
+
   private getDebugBalanceInfo(): DebugBalanceInfo {
     const difficulty = DIFFICULTY_CONFIGS[this.difficultyId];
+    const camera = this.camera.getDebugState();
 
     return {
       enabled: this.debugMode,
@@ -915,7 +946,9 @@ export class Game {
         totalLength: Math.round(this.pathManager.totalDistance),
         hoveredEnemyProgress: this.input.pointerWorldPosition ? this.findEnemyAt(this.input.pointerWorldPosition)?.normalizedPathProgress ?? null : null,
         hoveredEnemySegment: this.input.pointerWorldPosition ? this.findEnemyAt(this.input.pointerWorldPosition)?.currentSegmentIndex ?? null : null,
-        cameraZoom: this.camera.zoom
+        cameraZoom: camera.zoom,
+        cameraX: camera.x,
+        cameraY: camera.y
       },
       currentMultipliers: {
         health: difficulty.enemyHealthMultiplier,

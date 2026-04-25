@@ -107,6 +107,8 @@ export type DebugBalanceInfo = {
     hoveredEnemyProgress: number | null;
     hoveredEnemySegment: number | null;
     cameraZoom: number;
+    cameraX: number;
+    cameraY: number;
   };
   currentMultipliers: {
     health: number;

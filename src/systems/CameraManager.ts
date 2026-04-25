@@ -27,12 +27,13 @@ export class CameraManager {
   }
 
   resize(screenWidth: number, screenHeight: number): void {
-    this.screenWidth = screenWidth;
-    this.screenHeight = screenHeight;
+    this.screenWidth = this.sanitizeDimension(screenWidth, 1);
+    this.screenHeight = this.sanitizeDimension(screenHeight, 1);
     this.clampToWorld();
   }
 
   screenToWorld(screen: Vector2): Vector2 {
+    this.ensureValidState();
     return {
       x: screen.x / this.zoom + this.cameraX,
       y: screen.y / this.zoom + this.cameraY
@@ -40,6 +41,7 @@ export class CameraManager {
   }
 
   worldToScreen(world: Vector2): Vector2 {
+    this.ensureValidState();
     return {
       x: (world.x - this.cameraX) * this.zoom,
       y: (world.y - this.cameraY) * this.zoom
@@ -47,6 +49,7 @@ export class CameraManager {
   }
 
   applyTransform(ctx: CanvasRenderingContext2D): void {
+    this.ensureValidState();
     ctx.scale(this.zoom, this.zoom);
     ctx.translate(-this.cameraX, -this.cameraY);
   }
@@ -76,12 +79,14 @@ export class CameraManager {
 
   panByScreenDelta(deltaX: number, deltaY: number): void {
     if (!this.config.allowPan) return;
+    this.ensureValidState();
     this.cameraX -= deltaX / this.zoom;
     this.cameraY -= deltaY / this.zoom;
     this.clampToWorld();
   }
 
   zoomAtScreenPoint(nextZoom: number, screenPoint: Vector2): void {
+    this.ensureValidState();
     const before = this.screenToWorld(screenPoint);
     this.setZoom(nextZoom);
     this.cameraX = before.x - screenPoint.x / this.zoom;
@@ -90,6 +95,7 @@ export class CameraManager {
   }
 
   getViewportWorldBounds(padding = 0): CameraBounds {
+    this.ensureValidState();
     const min = this.screenToWorld({ x: -padding, y: -padding });
     const max = this.screenToWorld({ x: this.screenWidth + padding, y: this.screenHeight + padding });
     return {
@@ -105,6 +111,19 @@ export class CameraManager {
     return x + radius >= bounds.minX && x - radius <= bounds.maxX && y + radius >= bounds.minY && y - radius <= bounds.maxY;
   }
 
+  getDebugState(): { x: number; y: number; zoom: number; screenWidth: number; screenHeight: number; worldWidth: number; worldHeight: number } {
+    this.ensureValidState();
+    return {
+      x: this.cameraX,
+      y: this.cameraY,
+      zoom: this.zoom,
+      screenWidth: this.screenWidth,
+      screenHeight: this.screenHeight,
+      worldWidth: this.worldWidth,
+      worldHeight: this.worldHeight
+    };
+  }
+
   private centerOn(point: Vector2): void {
     this.cameraX = point.x - this.screenWidth / this.zoom / 2;
     this.cameraY = point.y - this.screenHeight / this.zoom / 2;
@@ -112,10 +131,13 @@ export class CameraManager {
   }
 
   private setZoom(zoom: number): void {
-    this.zoom = clamp(zoom, this.minZoom, this.maxZoom);
+    const safeMinZoom = Math.max(0.05, this.minZoom);
+    const safeMaxZoom = Math.max(safeMinZoom, this.maxZoom);
+    this.zoom = clamp(Number.isFinite(zoom) && zoom > 0 ? zoom : 1, safeMinZoom, safeMaxZoom);
   }
 
   private clampToWorld(): void {
+    this.ensureValidState(false);
     const visibleWidth = this.screenWidth / this.zoom;
     const visibleHeight = this.screenHeight / this.zoom;
 
@@ -130,5 +152,36 @@ export class CameraManager {
     } else {
       this.cameraY = clamp(this.cameraY, 0, this.worldHeight - visibleHeight);
     }
+  }
+
+  private ensureValidState(shouldClamp = true): void {
+    if (!Number.isFinite(this.screenWidth) || this.screenWidth <= 0) {
+      this.screenWidth = 960;
+    }
+    if (!Number.isFinite(this.screenHeight) || this.screenHeight <= 0) {
+      this.screenHeight = 540;
+    }
+    const invalidCameraX = !Number.isFinite(this.cameraX);
+    const invalidCameraY = !Number.isFinite(this.cameraY);
+    const invalidZoom = !Number.isFinite(this.zoom) || this.zoom <= 0 || this.zoom < this.minZoom * 0.5 || this.zoom > this.maxZoom * 2;
+
+    if (invalidCameraX) {
+      this.cameraX = 0;
+    }
+    if (invalidCameraY) {
+      this.cameraY = 0;
+    }
+    if (invalidZoom) {
+      this.zoom = clamp(Math.min(this.screenWidth / this.worldWidth, this.screenHeight / this.worldHeight), this.minZoom, this.maxZoom);
+      this.cameraX = this.worldWidth / 2 - this.screenWidth / this.zoom / 2;
+      this.cameraY = this.worldHeight / 2 - this.screenHeight / this.zoom / 2;
+    }
+    if (shouldClamp) {
+      this.clampToWorld();
+    }
+  }
+
+  private sanitizeDimension(value: number, fallback: number): number {
+    return Number.isFinite(value) && value > 0 ? value : fallback;
   }
 }
