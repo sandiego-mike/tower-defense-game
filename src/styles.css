@@ -166,12 +166,23 @@ select {
 
 .start-screen,
 .loading-screen {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 14px;
+  width: 100vw;
+  height: var(--visual-viewport-height, 100vh);
+  max-height: var(--visual-viewport-height, 100vh);
+  padding:
+    calc(env(safe-area-inset-top) + 8px)
+    calc(env(safe-area-inset-right) + 8px)
+    calc(env(safe-area-inset-bottom) + 8px)
+    calc(env(safe-area-inset-left) + 8px);
+  overflow: hidden;
   background: rgba(8, 13, 20, 0.52);
+  overscroll-behavior: none;
+  touch-action: none;
+  z-index: 18;
 }
 
 .loading-screen {
@@ -179,42 +190,56 @@ select {
 }
 
 .start-panel {
-  width: min(420px, 100%);
-  padding: 18px;
+  width: min(var(--start-panel-width, 420px), 100%);
+  max-height: calc(
+    var(--visual-viewport-height, 100vh) - var(--safe-area-top, env(safe-area-inset-top)) -
+      var(--safe-area-bottom, env(safe-area-inset-bottom)) - 16px
+  );
+  padding: var(--start-panel-padding, 18px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.94);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+  pointer-events: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .start-panel h1 {
-  margin: 0 0 16px;
-  font-size: 28px;
+  margin: var(--start-title-margin, 0 0 16px);
+  font-size: var(--start-title-font, 28px);
   line-height: 1.1;
 }
 
 .start-panel label {
   display: block;
-  margin: 12px 0 6px;
+  margin: var(--start-label-margin, 12px 0 6px);
   color: #cbd5e1;
-  font-size: 12px;
+  font-size: var(--start-label-font, 12px);
   font-weight: 700;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
+.start-panel select {
+  min-height: var(--start-select-min-height, 42px);
+  padding: var(--start-select-padding, 8px 10px);
+}
+
 .mission-description {
-  min-height: 38px;
-  margin: 8px 0 2px;
+  min-height: var(--start-description-min-height, 38px);
+  margin: var(--start-description-margin, 8px 0 2px);
   color: #cbd5e1;
-  font-size: 14px;
+  font-size: var(--start-description-font, 14px);
   line-height: 1.35;
 }
 
 .start-button {
   width: 100%;
-  min-height: 46px;
-  margin-top: 16px;
+  min-height: var(--start-button-min-height, 46px);
+  margin-top: var(--start-button-margin-top, 16px);
   border: 0;
   border-radius: 8px;
   background: #38bdf8;
