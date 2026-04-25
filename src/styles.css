@@ -61,13 +61,17 @@ select {
   touch-action: none;
 }
 
-#game-canvas {
+#game-wrapper {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+  background: #101820;
+  touch-action: none;
+}
+
+#game-canvas {
+  position: absolute;
   display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 320px;
   touch-action: none;
 }
 
@@ -717,18 +721,18 @@ select {
 
 @media (max-width: 560px) {
   .hud {
-    top: 8px;
-    left: 8px;
-    right: 8px;
+    top: 6px;
+    left: 6px;
+    right: 6px;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 5px;
+    gap: 4px;
   }
 
   .hud-group,
   .hud-actions {
-    min-height: 30px;
-    padding: 4px;
-    gap: 4px;
+    min-height: 28px;
+    padding: 3px;
+    gap: 3px;
   }
 
   .hud-primary {
@@ -744,44 +748,44 @@ select {
   .hud-metric {
     min-width: 0;
     flex: 0 1 auto;
-    padding: 1px 4px;
+    padding: 1px 3px;
   }
 
   .hud-metric span {
-    font-size: 8px;
+    font-size: 7px;
   }
 
   .hud-metric strong {
     margin-top: 1px;
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .hud-mission {
     grid-column: 1 / -1;
     justify-self: center;
-    min-height: 24px;
-    padding: 3px 8px;
-    gap: 6px;
+    min-height: 22px;
+    padding: 2px 7px;
+    gap: 5px;
   }
 
   .hud-mission strong {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .hud-mission span {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .icon-button {
-    width: 30px;
-    min-height: 30px;
-    font-size: 15px;
+    width: 28px;
+    min-height: 28px;
+    font-size: 14px;
   }
 
   .speed-control {
-    min-height: 30px;
-    padding: 0 5px;
-    gap: 4px;
+    min-height: 28px;
+    padding: 0 4px;
+    gap: 3px;
   }
 
   .speed-label {
@@ -790,21 +794,21 @@ select {
 
   .speed-control select {
     width: 48px;
-    min-height: 24px;
+    min-height: 23px;
     padding: 2px 4px;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .wave-info-button {
-    top: 70px;
-    left: 8px;
-    width: 30px;
-    height: 30px;
+    top: 58px;
+    left: 6px;
+    width: 28px;
+    height: 28px;
   }
 
   .wave-info-panel {
-    top: 104px;
-    left: 8px;
+    top: 90px;
+    left: 6px;
     width: 250px;
   }
 
@@ -849,20 +853,22 @@ select {
   }
 }
 
-@media (max-width: 420px) {
-  .hud {
-    left: 8px;
-    right: 8px;
+@media (orientation: portrait) and (max-width: 560px) {
+  #game-canvas {
+    transform: translateY(-14px);
   }
 
   .tower-palette {
-    width: 420px;
+    top: min(calc(var(--portrait-tower-top, 300px) - 12px), calc(100% - 68px));
+    bottom: auto;
+    width: 360px;
     min-height: 48px;
     padding: 6px;
     gap: 5px;
   }
 
   .tower-button {
+    min-height: 44px;
     padding: 6px 4px;
     font-size: 11px;
   }
@@ -871,6 +877,13 @@ select {
     width: 14px;
     height: 14px;
     flex-basis: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hud {
+    left: 6px;
+    right: 6px;
   }
 
   .tower-stats {

@@ -189,16 +189,15 @@ export class InputManager {
 
   private getScreenPosition(event: Pick<PointerEvent | WheelEvent, "clientX" | "clientY">): Vector2 {
     const rect = this.canvas.getBoundingClientRect();
-    const pixelRatio = window.devicePixelRatio || 1;
-    const canvasScaleX = rect.width > 0 ? this.canvas.width / rect.width : pixelRatio;
-    const canvasScaleY = rect.height > 0 ? this.canvas.height / rect.height : pixelRatio;
+    const canvasScaleX = rect.width > 0 ? this.canvas.width / rect.width : 1;
+    const canvasScaleY = rect.height > 0 ? this.canvas.height / rect.height : 1;
 
     // Convert browser pointer coordinates into logical canvas screen space.
-    // Game interactions then use CameraManager.screenToWorld() so UI remains
-    // screen-space while towers, enemies, and placement stay in stable world units.
+    // The canvas is visually scaled with CSS, while the backing store stays at
+    // the fixed game resolution, so browser coordinates must be scaled back up.
     return {
-      x: (event.clientX - rect.left) * (canvasScaleX / pixelRatio),
-      y: (event.clientY - rect.top) * (canvasScaleY / pixelRatio)
+      x: (event.clientX - rect.left) * canvasScaleX,
+      y: (event.clientY - rect.top) * canvasScaleY
     };
   }
 

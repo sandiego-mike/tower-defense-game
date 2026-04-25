@@ -36,6 +36,8 @@ import {
 } from "../types";
 
 export class Game {
+  private static readonly GAME_WIDTH = 1536;
+  private static readonly GAME_HEIGHT = 864;
   private static readonly VIEWPORT_PADDING = 100;
 
   readonly path: Vector2[] = [];
@@ -213,7 +215,7 @@ export class Game {
     this.spendGold(placementCost);
     const tower = new Tower(position, towerType, placementCost);
     this.towers.push(tower);
-    this.selectedPlacedTower = tower;
+    this.selectedPlacedTower = null;
     this.selectedTowerType = null;
     this.updateUi();
     return true;
@@ -222,16 +224,16 @@ export class Game {
   handleMapPress(position: Vector2): void {
     if (this.state !== "playing") return;
 
+    if (this.selectedTowerType) {
+      this.tryPlaceTower(position);
+      return;
+    }
+
     const tower = this.findTowerAt(position);
     if (tower) {
       this.selectedPlacedTower = tower;
       this.selectedTowerType = null;
       this.updateUi();
-      return;
-    }
-
-    if (this.selectedTowerType) {
-      this.tryPlaceTower(position);
       return;
     }
 
@@ -570,19 +572,12 @@ export class Game {
   }
 
   private resize(): void {
-    const pixelRatio = window.devicePixelRatio || 1;
-    this.pixelRatio = pixelRatio;
-    this.canvas.style.width = "100%";
-    this.canvas.style.height = "100%";
-    const canvasRect = this.canvas.getBoundingClientRect();
-    const viewportWidth = canvasRect.width || window.innerWidth;
-    const viewportHeight = canvasRect.height || window.innerHeight;
-
-    this.width = Math.max(320, viewportWidth);
-    this.height = Math.max(320, viewportHeight);
-    this.canvas.width = Math.floor(this.width * pixelRatio);
-    this.canvas.height = Math.floor(this.height * pixelRatio);
-    this.ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    this.pixelRatio = 1;
+    this.width = Game.GAME_WIDTH;
+    this.height = Game.GAME_HEIGHT;
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.camera.resize(this.width, this.height);
     this.resetCamera(true);
     if (!CAMERA_CONFIG.useCameraManager) {

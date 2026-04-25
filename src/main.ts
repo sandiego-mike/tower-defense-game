@@ -3,6 +3,9 @@ import { Game } from "./game/Game";
 import { AssetManager } from "./systems/AssetManager";
 import "./styles.css";
 
+const GAME_WIDTH = 1536;
+const GAME_HEIGHT = 864;
+
 const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
 const appContainer = document.querySelector<HTMLElement>("#app");
 const loadingScreen = document.querySelector<HTMLElement>("#loading-screen");
@@ -16,6 +19,31 @@ const gameCanvas = canvas;
 let viewportResizeTimer = 0;
 const debugViewportEnabled = new URLSearchParams(window.location.search).get("debugViewport") === "1";
 let viewportDebugOverlay: HTMLPreElement | null = null;
+
+function resizeCanvas(): void {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const scale = Math.min(vw / GAME_WIDTH, vh / GAME_HEIGHT);
+  const displayWidth = GAME_WIDTH * scale;
+  const displayHeight = GAME_HEIGHT * scale;
+  const isPortrait = vh > vw;
+  const centeredTop = (vh - displayHeight) / 2;
+  const portraitTop = Math.max(52, Math.min(centeredTop, vh * 0.12));
+  const displayTop = isPortrait ? portraitTop : centeredTop;
+  const displayLeft = (vw - displayWidth) / 2;
+
+  gameCanvas.style.position = "absolute";
+  gameCanvas.style.width = `${displayWidth}px`;
+  gameCanvas.style.height = `${displayHeight}px`;
+  gameCanvas.style.left = `${displayLeft}px`;
+  gameCanvas.style.top = `${displayTop}px`;
+
+  document.documentElement.style.setProperty("--game-canvas-top", `${displayTop}px`);
+  document.documentElement.style.setProperty("--game-canvas-left", `${displayLeft}px`);
+  document.documentElement.style.setProperty("--game-canvas-display-width", `${displayWidth}px`);
+  document.documentElement.style.setProperty("--game-canvas-display-height", `${displayHeight}px`);
+  document.documentElement.style.setProperty("--portrait-tower-top", `${displayTop + displayHeight + 8}px`);
+}
 
 function updateViewportFallbackSize(): void {
   const visualViewport = window.visualViewport;
@@ -138,11 +166,13 @@ function scheduleViewportFallbackSize(): void {
   window.clearTimeout(viewportResizeTimer);
   viewportResizeTimer = window.setTimeout(() => {
     updateViewportFallbackSize();
+    resizeCanvas();
     updateViewportDiagnostics("viewport resize");
   }, 100);
 }
 
 updateViewportFallbackSize();
+resizeCanvas();
 updateViewportDiagnostics("initial");
 window.addEventListener("resize", scheduleViewportFallbackSize);
 window.addEventListener("orientationchange", scheduleViewportFallbackSize);
@@ -164,6 +194,7 @@ async function boot(): Promise<void> {
   }
 
   loadingScreen?.classList.add("hidden");
+  resizeCanvas();
   const game = new Game(gameCanvas, assets);
   game.start();
   window.setTimeout(() => {
