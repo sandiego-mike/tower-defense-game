@@ -193,6 +193,17 @@ select {
   z-index: 20;
 }
 
+.loading-screen {
+  background-color: #08131a;
+  background-image:
+    linear-gradient(180deg, rgba(2, 6, 23, 0.58), rgba(2, 6, 23, 0.84)),
+    radial-gradient(circle at 50% 18%, rgba(14, 165, 233, 0.22), transparent 42%),
+    url("/assets/ui/dashboard-background.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
 .start-screen {
   background-color: #08131a;
   background-image:
@@ -266,6 +277,20 @@ select {
 
 #dashboard-main .dashboard-actions {
   justify-self: center;
+}
+
+.loading-panel {
+  justify-items: center;
+  max-width: min(480px, calc(100vw - 24px));
+  text-align: center;
+}
+
+.loading-panel h1 {
+  margin: 0;
+  font-size: clamp(34px, 9vw, 54px);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
 }
 
 .dashboard-view h1,

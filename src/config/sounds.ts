@@ -26,10 +26,10 @@ export const SOUND_CONFIGS: SoundConfig[] = [
   { key: "enemy-destroyed", path: "/assets/sounds/enemy-destroyed.mp3", volume: 0.34, cooldownMs: 80, enabled: true, poolSize: 2 },
   { key: "wave-start", path: "/assets/sounds/wave-start.mp3", volume: 0.42, cooldownMs: 500, enabled: true },
   { key: "boss-spawn", path: "/assets/sounds/boss-spawn.mp3", volume: 0.52, cooldownMs: 800, enabled: true },
-  { key: "tower-placed", path: "/assets/sounds/tower-placed.mp3", volume: 0.36, cooldownMs: 120, enabled: true },
-  { key: "tower-upgraded", path: "/assets/sounds/tower-upgraded.mp3", volume: 0.4, cooldownMs: 140, enabled: true },
-  { key: "tower-sold", path: "/assets/sounds/tower-sold.mp3", volume: 0.32, cooldownMs: 140, enabled: true },
+  { key: "tower-placed", path: "/assets/sounds/tower-placed.mp3", volume: 0.36, cooldownMs: 25, enabled: true, poolSize: 3 },
+  { key: "tower-upgraded", path: "/assets/sounds/tower-upgraded.mp3", volume: 0.4, cooldownMs: 0, enabled: true, poolSize: 2 },
+  { key: "tower-sold", path: "/assets/sounds/tower-sold.mp3", volume: 0.32, cooldownMs: 0, enabled: true, poolSize: 2 },
   { key: "victory", path: "/assets/sounds/victory.mp3", volume: 0.58, cooldownMs: 1200, enabled: true },
   { key: "defeat", path: "/assets/sounds/defeat.mp3", volume: 0.5, cooldownMs: 1200, enabled: true },
-  { key: "invalid-placement", path: "/assets/sounds/invalid-placement.mp3", volume: 0.26, cooldownMs: 180, enabled: true }
+  { key: "invalid-placement", path: "/assets/sounds/invalid-placement.mp3", volume: 0.26, cooldownMs: 0, enabled: true, poolSize: 2 }
 ];
