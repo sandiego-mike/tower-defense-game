@@ -8,6 +8,7 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
@@ -41,16 +42,18 @@ select {
 #app {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   overflow: hidden;
   overscroll-behavior: none;
 }
 
 #game-canvas {
   display: block;
-  width: 100vw;
-  height: 100vh;
-  width: 100dvw;
-  height: 100dvh;
+  width: 100%;
+  height: 100%;
   touch-action: none;
 }
 
@@ -682,46 +685,94 @@ select {
 
 @media (max-width: 560px) {
   .hud {
-    grid-template-columns: 1fr;
-    gap: 6px;
+    top: max(6px, env(safe-area-inset-top));
+    left: max(6px, env(safe-area-inset-left));
+    right: max(6px, env(safe-area-inset-right));
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 5px;
   }
 
   .hud-group,
   .hud-actions {
-    min-height: 36px;
-    padding: 5px;
-  }
-
-  .hud-primary,
-  .hud-mission,
-  .hud-actions {
-    justify-self: stretch;
+    min-height: 30px;
+    padding: 4px;
+    gap: 4px;
   }
 
   .hud-primary {
-    justify-content: space-between;
+    justify-self: start;
+    justify-content: flex-start;
+  }
+
+  .hud-actions {
+    justify-self: end;
+    flex-wrap: nowrap;
   }
 
   .hud-metric {
     min-width: 0;
-    flex: 1 1 0;
+    flex: 0 1 auto;
+    padding: 1px 4px;
   }
 
-  .hud-metric strong,
-  .hud-mission strong {
-    font-size: 12px;
+  .hud-metric span {
+    font-size: 8px;
+  }
+
+  .hud-metric strong {
+    margin-top: 1px;
+    font-size: 11px;
   }
 
   .hud-mission {
-    justify-content: space-between;
+    grid-column: 1 / -1;
+    justify-self: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    gap: 6px;
+  }
+
+  .hud-mission strong {
+    font-size: 11px;
+  }
+
+  .hud-mission span {
+    font-size: 9px;
+  }
+
+  .icon-button {
+    width: 30px;
+    min-height: 30px;
+    font-size: 15px;
+  }
+
+  .speed-control {
+    min-height: 30px;
+    padding: 0 5px;
+    gap: 4px;
+  }
+
+  .speed-label {
+    display: none;
+  }
+
+  .speed-control select {
+    width: 48px;
+    min-height: 24px;
+    padding: 2px 4px;
+    font-size: 12px;
   }
 
   .wave-info-button {
-    top: calc(max(12px, env(safe-area-inset-top)) + 90px);
+    top: calc(max(6px, env(safe-area-inset-top)) + 62px);
+    left: max(6px, env(safe-area-inset-left));
+    width: 30px;
+    height: 30px;
   }
 
   .wave-info-panel {
-    top: calc(max(12px, env(safe-area-inset-top)) + 128px);
+    top: calc(max(6px, env(safe-area-inset-top)) + 96px);
+    left: max(6px, env(safe-area-inset-left));
     width: min(250px, calc(100vw - 24px));
   }
 
@@ -751,19 +802,6 @@ select {
 
   .tower-stats {
     grid-template-columns: 1fr 1fr;
-  }
-
-  .hud-actions {
-    flex-wrap: wrap;
-  }
-
-  .small-button {
-    flex: 1;
-  }
-
-  .speed-control {
-    flex: 1 1 100%;
-    justify-content: space-between;
   }
 
   .debug-panel {

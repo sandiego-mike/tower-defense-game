@@ -11,6 +11,9 @@ export const GENERIC_ENEMY_SPRITE_KEYS = {
 } as const;
 
 export const CAMERA_CONFIG: CameraConfig = {
+  // TODO: Re-enable after the camera rendering pipeline is rebuilt and tested
+  // end-to-end. With this false, gameplay uses the pre-camera canvas-space path.
+  useCameraManager: false,
   // Gameplay lives in stable world units. Responsive canvas size and device
   // orientation change the camera only; enemy paths and tower positions do not
   // get recalculated from screen pixels.

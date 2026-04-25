@@ -200,6 +200,7 @@ export type MissionConfig = {
 export type CameraZoomMode = "fit-path" | "fit-map";
 
 export type CameraConfig = {
+  useCameraManager: boolean;
   worldWidth: number;
   worldHeight: number;
   mobileDefaultZoomMode: CameraZoomMode;

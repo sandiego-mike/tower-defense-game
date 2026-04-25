@@ -168,7 +168,7 @@ export class Game {
     this.feedbackTimer = 1.4;
     this.screenShakeTimer = 0;
     this.screenShakeIntensity = 0;
-    this.buildWorldPath();
+    this.buildPath();
     this.resetCamera(true);
     this.updateUi();
   }
@@ -239,19 +239,22 @@ export class Game {
   }
 
   screenToWorld(position: Vector2): Vector2 {
+    if (!CAMERA_CONFIG.useCameraManager) return position;
     return this.camera.screenToWorld(position);
   }
 
   panCameraByScreenDelta(deltaX: number, deltaY: number): void {
+    if (!CAMERA_CONFIG.useCameraManager) return;
     this.camera.panByScreenDelta(deltaX, deltaY);
   }
 
   zoomCameraAtScreenPoint(nextZoom: number, screenPoint: Vector2): void {
-    if (!CAMERA_CONFIG.allowPinchZoom) return;
+    if (!CAMERA_CONFIG.useCameraManager || !CAMERA_CONFIG.allowPinchZoom) return;
     this.camera.zoomAtScreenPoint(nextZoom, screenPoint);
   }
 
   resetCamera(silent = false): void {
+    if (!CAMERA_CONFIG.useCameraManager) return;
     this.camera.resetToDefault(this.pathManager.getBounds());
     if (!silent) {
       this.showFeedback("Camera reset");
@@ -260,7 +263,7 @@ export class Game {
   }
 
   get cameraZoom(): number {
-    return this.camera.zoom;
+    return CAMERA_CONFIG.useCameraManager ? this.camera.zoom : 1;
   }
 
   upgradeSelectedTower(): void {
@@ -410,7 +413,11 @@ export class Game {
     this.ctx.save();
     const shakeOffset = this.getScreenShakeOffset();
     this.ctx.translate(shakeOffset.x, shakeOffset.y);
-    this.camera.applyTransform(this.ctx);
+    // TODO: Re-enable CameraManager transforms once world rendering and input
+    // are validated together. For now, restore the pre-camera canvas-space draw path.
+    if (CAMERA_CONFIG.useCameraManager) {
+      this.camera.applyTransform(this.ctx);
+    }
     this.drawBackground();
     this.drawPath();
 
@@ -452,7 +459,7 @@ export class Game {
       this.renderStats.culledEffects = effectStats.culled;
     }
     this.drawPlacementPreview();
-    if (this.debugMode) {
+    if (this.debugMode && CAMERA_CONFIG.useCameraManager) {
       this.drawWorldDebugOverlay();
     }
     if (this.debugMode && this.showCullingBounds) {
@@ -473,21 +480,21 @@ export class Game {
     }
 
     this.ctx.fillStyle = PROTOTYPE_FOREST_THEME.backgroundColor;
-    this.ctx.fillRect(0, 0, this.camera.worldWidth, this.camera.worldHeight);
+    this.ctx.fillRect(0, 0, this.getWorldWidth(), this.getWorldHeight());
 
     this.ctx.strokeStyle = PROTOTYPE_FOREST_THEME.backgroundGridColor;
     this.ctx.lineWidth = 1;
     const gridSize = 48;
-    for (let x = 0; x <= this.camera.worldWidth; x += gridSize) {
+    for (let x = 0; x <= this.getWorldWidth(); x += gridSize) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, this.camera.worldHeight);
+      this.ctx.lineTo(x, this.getWorldHeight());
       this.ctx.stroke();
     }
-    for (let y = 0; y <= this.camera.worldHeight; y += gridSize) {
+    for (let y = 0; y <= this.getWorldHeight(); y += gridSize) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.camera.worldWidth, y);
+      this.ctx.lineTo(this.getWorldWidth(), y);
       this.ctx.stroke();
     }
     this.ctx.restore();
@@ -500,11 +507,11 @@ export class Game {
     const imageHeight = image instanceof HTMLImageElement ? image.naturalHeight : image.height;
     if (imageWidth <= 0 || imageHeight <= 0) return;
 
-    const scale = Math.max(this.camera.worldWidth / imageWidth, this.camera.worldHeight / imageHeight);
+    const scale = Math.max(this.getWorldWidth() / imageWidth, this.getWorldHeight() / imageHeight);
     const drawWidth = imageWidth * scale;
     const drawHeight = imageHeight * scale;
-    const drawX = (this.camera.worldWidth - drawWidth) / 2;
-    const drawY = (this.camera.worldHeight - drawHeight) / 2;
+    const drawX = (this.getWorldWidth() - drawWidth) / 2;
+    const drawY = (this.getWorldHeight() - drawHeight) / 2;
     this.ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
   }
 
@@ -564,8 +571,9 @@ export class Game {
   private resize(): void {
     const pixelRatio = window.devicePixelRatio || 1;
     this.pixelRatio = pixelRatio;
-    const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
-    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const canvasRect = this.canvas.getBoundingClientRect();
+    const viewportWidth = canvasRect.width || window.innerWidth;
+    const viewportHeight = canvasRect.height || window.innerHeight;
 
     this.width = Math.max(320, viewportWidth);
     this.height = Math.max(320, viewportHeight);
@@ -576,12 +584,17 @@ export class Game {
     this.ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     this.camera.resize(this.width, this.height);
     this.resetCamera(true);
+    if (!CAMERA_CONFIG.useCameraManager) {
+      this.buildPath();
+    }
   }
 
-  private buildWorldPath(): void {
+  private buildPath(): void {
     const mission = MISSION_CONFIGS[this.missionId];
     this.path.length = 0;
-    this.path.push(...mission.path.map((point) => ({ x: point.x * this.camera.worldWidth, y: point.y * this.camera.worldHeight })));
+    const pathWidth = CAMERA_CONFIG.useCameraManager ? this.camera.worldWidth : this.width;
+    const pathHeight = CAMERA_CONFIG.useCameraManager ? this.camera.worldHeight : this.height;
+    this.path.push(...mission.path.map((point) => ({ x: point.x * pathWidth, y: point.y * pathHeight })));
     this.pathManager.rebuild(this.path);
   }
 
@@ -603,10 +616,11 @@ export class Game {
 
     for (let index = this.projectiles.length - 1; index >= 0; index -= 1) {
       const projectile = this.projectiles[index];
+      const worldWidth = this.getWorldWidth();
+      const worldHeight = this.getWorldHeight();
       const shouldRecycle =
         projectile.isDone ||
-        (!projectile.hasValidTarget &&
-          projectile.isFarOutsideWorld(this.camera.worldWidth, this.camera.worldHeight, Game.VIEWPORT_PADDING * 2));
+        (!projectile.hasValidTarget && projectile.isFarOutsideWorld(worldWidth, worldHeight, Game.VIEWPORT_PADDING * 2));
       if (shouldRecycle) {
         this.projectilePool.push(this.projectiles[index]);
         const lastProjectile = this.projectiles.pop();
@@ -786,7 +800,7 @@ export class Game {
 
   private validateTowerPlacement(position: Vector2, towerType: TowerType): { canPlace: boolean; reason: string } {
     const insideMap =
-      position.x >= 18 && position.y >= 18 && position.x <= this.camera.worldWidth - 18 && position.y <= this.camera.worldHeight - 18;
+      position.x >= 18 && position.y >= 18 && position.x <= this.getWorldWidth() - 18 && position.y <= this.getWorldHeight() - 18;
     if (!insideMap) {
       return { canPlace: false, reason: "Place towers inside the map." };
     }
@@ -872,7 +886,11 @@ export class Game {
   }
 
   private isCircleInViewport(x: number, y: number, radius: number, padding: number): boolean {
-    return this.camera.isCircleVisible(x, y, radius, padding);
+    if (CAMERA_CONFIG.useCameraManager) {
+      return this.camera.isCircleVisible(x, y, radius, padding);
+    }
+
+    return x + radius >= -padding && x - radius <= this.width + padding && y + radius >= -padding && y - radius <= this.height + padding;
   }
 
   private isProjectileInViewport(projectile: Projectile, padding: number): boolean {
@@ -887,9 +905,21 @@ export class Game {
     this.ctx.strokeStyle = "rgba(45, 212, 191, 0.85)";
     this.ctx.lineWidth = 2;
     this.ctx.setLineDash([8, 6]);
-    const bounds = this.camera.getViewportWorldBounds(Game.VIEWPORT_PADDING);
-    this.ctx.strokeRect(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+    if (CAMERA_CONFIG.useCameraManager) {
+      const bounds = this.camera.getViewportWorldBounds(Game.VIEWPORT_PADDING);
+      this.ctx.strokeRect(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+    } else {
+      this.ctx.strokeRect(-Game.VIEWPORT_PADDING, -Game.VIEWPORT_PADDING, this.width + Game.VIEWPORT_PADDING * 2, this.height + Game.VIEWPORT_PADDING * 2);
+    }
     this.ctx.restore();
+  }
+
+  private getWorldWidth(): number {
+    return CAMERA_CONFIG.useCameraManager ? this.camera.worldWidth : this.width;
+  }
+
+  private getWorldHeight(): number {
+    return CAMERA_CONFIG.useCameraManager ? this.camera.worldHeight : this.height;
   }
 
   private drawWorldDebugOverlay(): void {
@@ -897,7 +927,7 @@ export class Game {
     this.ctx.lineWidth = 2;
     this.ctx.strokeStyle = "rgba(250, 204, 21, 0.9)";
     this.ctx.setLineDash([10, 8]);
-    this.ctx.strokeRect(0, 0, this.camera.worldWidth, this.camera.worldHeight);
+    this.ctx.strokeRect(0, 0, this.getWorldWidth(), this.getWorldHeight());
     this.ctx.setLineDash([]);
 
     this.ctx.fillStyle = "rgba(59, 130, 246, 0.95)";
