@@ -121,7 +121,7 @@ select {
 .hud-mission {
   min-width: 0;
   justify-content: center;
-  gap: 8px;
+  gap: var(--mission-gap, 8px);
   text-align: center;
   transform: scale(var(--mission-scale, 1));
   transform-origin: top center;
@@ -144,7 +144,7 @@ select {
 }
 
 .hud-metric {
-  min-width: 64px;
+  min-width: var(--hud-metric-min-width, 64px);
   padding: var(--hud-metric-padding, 2px 6px);
 }
 
@@ -374,16 +374,16 @@ select {
 }
 
 .cancel-placement-button {
-  width: 38px;
-  min-width: 38px;
-  min-height: 38px;
+  width: var(--cancel-button-size, 38px);
+  min-width: var(--cancel-button-size, 38px);
+  min-height: var(--cancel-button-size, 38px);
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   background: rgba(71, 85, 105, 0.95);
   color: #f8fafc;
   cursor: pointer;
-  font-size: 20px;
+  font-size: var(--cancel-button-font, 20px);
   font-weight: 900;
   line-height: 1.15;
   text-align: center;
@@ -391,15 +391,15 @@ select {
 
 .tower-inspector {
   position: absolute;
-  top: 108px;
-  right: 12px;
+  top: var(--tower-inspector-top, 108px);
+  right: var(--tower-inspector-right, 12px);
   bottom: var(--tower-inspector-bottom, auto);
   display: grid;
   grid-template-columns: 1fr;
-  width: 280px;
-  gap: 10px;
+  width: var(--tower-inspector-width, 280px);
+  gap: var(--tower-inspector-gap, 10px);
   align-items: start;
-  padding: 10px;
+  padding: var(--tower-inspector-padding, 10px);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.88);
@@ -426,7 +426,7 @@ select {
 .tower-stat {
   display: grid;
   gap: 2px;
-  padding: 8px;
+  padding: var(--tower-stat-padding, 8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   background: rgba(8, 13, 20, 0.34);
@@ -463,14 +463,14 @@ select {
 .tower-inspector select {
   display: block;
   width: 100%;
-  min-height: 36px;
+  min-height: var(--panel-control-min-height, 36px);
   margin-top: 4px;
 }
 
 .upgrade-button {
   display: flex;
   width: 100%;
-  min-height: 36px;
+  min-height: var(--panel-control-min-height, 36px);
   align-items: center;
   justify-content: center;
   padding: 0 12px;
@@ -532,6 +532,8 @@ select {
 .tower-button {
   display: flex;
   flex: 1 1 0;
+  width: var(--tower-button-width, auto);
+  height: var(--tower-button-height, auto);
   min-width: 0;
   min-height: var(--tower-button-min-height, auto);
   align-items: center;
@@ -792,25 +794,26 @@ select {
 
 .layout-mobilePortrait .tower-button,
 .layout-mobileLandscape .tower-button {
+  flex: 0 0 var(--tower-button-width, 84px);
   flex-direction: column;
 }
 
 .layout-mobilePortrait .cancel-placement-button,
 .layout-mobileLandscape .cancel-placement-button {
-  width: 34px;
-  min-width: 34px;
-  min-height: 34px;
-  font-size: 18px;
+  width: var(--cancel-button-size, 34px);
+  min-width: var(--cancel-button-size, 34px);
+  min-height: var(--cancel-button-size, 34px);
+  font-size: var(--cancel-button-font, 18px);
 }
 
 .layout-mobilePortrait .tower-inspector,
 .layout-mobileLandscape .tower-inspector {
-  top: auto;
-  left: 12px;
-  right: 12px;
-  width: auto;
-  gap: 8px;
-  padding: 8px;
+  top: var(--tower-inspector-top, auto);
+  left: var(--tower-inspector-right, 12px);
+  right: var(--tower-inspector-right, 12px);
+  width: var(--tower-inspector-width, auto);
+  gap: var(--tower-inspector-gap, 8px);
+  padding: var(--tower-inspector-padding, 8px);
 }
 
 .layout-mobilePortrait .tower-stats,
@@ -821,7 +824,7 @@ select {
 
 .layout-mobilePortrait .tower-stat,
 .layout-mobileLandscape .tower-stat {
-  padding: 6px;
+  padding: var(--tower-stat-padding, 6px);
 }
 
 .layout-mobilePortrait .tower-inspector select,
@@ -830,7 +833,7 @@ select {
 .layout-mobileLandscape .tower-inspector select,
 .layout-mobileLandscape .upgrade-button,
 .layout-mobileLandscape .secondary-button {
-  min-height: 40px;
+  min-height: var(--panel-control-min-height, 40px);
 }
 
 .layout-mobilePortrait .debug-panel,
