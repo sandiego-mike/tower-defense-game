@@ -854,13 +854,8 @@ select {
 }
 
 @media (orientation: portrait) and (max-width: 560px) {
-  #game-canvas {
-    transform: translateY(-14px);
-  }
-
   .tower-palette {
-    top: min(calc(var(--portrait-tower-top, 300px) - 12px), calc(100% - 68px));
-    bottom: auto;
+    bottom: max(8px, var(--safe-area-bottom, 0px));
     width: 360px;
     min-height: 48px;
     padding: 6px;

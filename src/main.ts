@@ -19,18 +19,75 @@ const gameCanvas = canvas;
 let viewportResizeTimer = 0;
 const debugViewportEnabled = new URLSearchParams(window.location.search).get("debugViewport") === "1";
 let viewportDebugOverlay: HTMLPreElement | null = null;
+let safeAreaProbe: HTMLDivElement | null = null;
+
+interface SafeAreaInsets {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+interface MeasuredViewport {
+  width: number;
+  height: number;
+  innerWidth: number;
+  innerHeight: number;
+  safeArea: SafeAreaInsets;
+  availableWidth: number;
+  availableHeight: number;
+}
+
+function getSafeAreaInsets(): SafeAreaInsets {
+  if (!safeAreaProbe) {
+    safeAreaProbe = document.createElement("div");
+    safeAreaProbe.style.position = "fixed";
+    safeAreaProbe.style.inset = "0";
+    safeAreaProbe.style.visibility = "hidden";
+    safeAreaProbe.style.pointerEvents = "none";
+    safeAreaProbe.style.paddingTop = "env(safe-area-inset-top)";
+    safeAreaProbe.style.paddingRight = "env(safe-area-inset-right)";
+    safeAreaProbe.style.paddingBottom = "env(safe-area-inset-bottom)";
+    safeAreaProbe.style.paddingLeft = "env(safe-area-inset-left)";
+    document.body.appendChild(safeAreaProbe);
+  }
+
+  const styles = window.getComputedStyle(safeAreaProbe);
+  return {
+    top: parseFloat(styles.paddingTop) || 0,
+    right: parseFloat(styles.paddingRight) || 0,
+    bottom: parseFloat(styles.paddingBottom) || 0,
+    left: parseFloat(styles.paddingLeft) || 0
+  };
+}
+
+function getMeasuredViewport(): MeasuredViewport {
+  const visualViewport = window.visualViewport;
+  const width = visualViewport?.width ?? window.innerWidth;
+  const height = visualViewport?.height ?? window.innerHeight;
+  const safeArea = getSafeAreaInsets();
+
+  return {
+    width,
+    height,
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight,
+    safeArea,
+    availableWidth: Math.max(1, width - safeArea.left - safeArea.right),
+    availableHeight: Math.max(1, height - safeArea.top - safeArea.bottom)
+  };
+}
 
 function resizeCanvas(): void {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const scale = Math.min(vw / GAME_WIDTH, vh / GAME_HEIGHT);
+  const viewport = getMeasuredViewport();
+  const scale = Math.min(viewport.availableWidth / GAME_WIDTH, viewport.availableHeight / GAME_HEIGHT);
   const displayWidth = GAME_WIDTH * scale;
   const displayHeight = GAME_HEIGHT * scale;
-  const isPortrait = vh > vw;
-  const centeredTop = (vh - displayHeight) / 2;
-  const portraitTop = Math.max(52, Math.min(centeredTop, vh * 0.12));
+  const isPortrait = viewport.height > viewport.width;
+  const centeredTop = (viewport.availableHeight - displayHeight) / 2;
+  const portraitTop = Math.min(Math.max(44, viewport.availableHeight * 0.08), centeredTop);
   const displayTop = isPortrait ? portraitTop : centeredTop;
-  const displayLeft = (vw - displayWidth) / 2;
+  const displayLeft = (viewport.availableWidth - displayWidth) / 2;
 
   gameCanvas.style.position = "absolute";
   gameCanvas.style.width = `${displayWidth}px`;
@@ -46,12 +103,14 @@ function resizeCanvas(): void {
 }
 
 function updateViewportFallbackSize(): void {
-  const visualViewport = window.visualViewport;
-  const viewportWidth = visualViewport?.width ?? window.innerWidth;
-  const viewportHeight = visualViewport?.height ?? window.innerHeight;
+  const viewport = getMeasuredViewport();
 
-  document.documentElement.style.setProperty("--visual-viewport-width", `${viewportWidth}px`);
-  document.documentElement.style.setProperty("--visual-viewport-height", `${viewportHeight}px`);
+  document.documentElement.style.setProperty("--visual-viewport-width", `${viewport.width}px`);
+  document.documentElement.style.setProperty("--visual-viewport-height", `${viewport.height}px`);
+  document.documentElement.style.setProperty("--safe-area-top", `${viewport.safeArea.top}px`);
+  document.documentElement.style.setProperty("--safe-area-right", `${viewport.safeArea.right}px`);
+  document.documentElement.style.setProperty("--safe-area-bottom", `${viewport.safeArea.bottom}px`);
+  document.documentElement.style.setProperty("--safe-area-left", `${viewport.safeArea.left}px`);
 }
 
 function getViewportClass(width: number, height: number): string {
@@ -75,8 +134,9 @@ function createViewportDebugOverlay(): HTMLPreElement {
 function collectViewportDiagnostics(label: string): Record<string, unknown> {
   const canvasRect = gameCanvas.getBoundingClientRect();
   const appRect = appContainer?.getBoundingClientRect();
-  const orientation = window.innerWidth >= window.innerHeight ? "landscape" : "portrait";
-  const viewportClass = getViewportClass(window.innerWidth, window.innerHeight);
+  const viewport = getMeasuredViewport();
+  const orientation = viewport.width >= viewport.height ? "landscape" : "portrait";
+  const viewportClass = getViewportClass(viewport.width, viewport.height);
 
   return {
     label,
@@ -96,6 +156,13 @@ function collectViewportDiagnostics(label: string): Record<string, unknown> {
     window: {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight
+    },
+    measuredViewport: {
+      width: viewport.width,
+      height: viewport.height,
+      availableWidth: viewport.availableWidth,
+      availableHeight: viewport.availableHeight,
+      safeArea: viewport.safeArea
     },
     visualViewport: window.visualViewport
       ? {
