@@ -214,6 +214,7 @@ export class UIManager {
   private readonly waveInfoToggle = document.querySelector<HTMLButtonElement>("#wave-info-toggle");
   private readonly waveInfoContent = document.querySelector<HTMLElement>("#wave-info-content");
   private readonly pauseButton = document.querySelector<HTMLButtonElement>("#pause-button");
+  private readonly soundToggleButton = document.querySelector<HTMLButtonElement>("#sound-toggle-button");
   private readonly speedSelect = document.querySelector<HTMLSelectElement>("#speed-select");
   private readonly debugPanel = document.querySelector<HTMLElement>("#debug-panel");
   private readonly debugContent = document.querySelector<HTMLElement>("#debug-content");
@@ -263,6 +264,7 @@ export class UIManager {
     onToggleDebugHitboxes: () => void,
     onToggleCullingBounds: () => void,
     onResetCamera: () => void,
+    onToggleMute: () => void,
     private readonly isMissionUnlocked: (missionId: MissionId) => boolean
   ) {
     this.populateSelects();
@@ -282,7 +284,8 @@ export class UIManager {
       onToggleEffects,
       onToggleDebugHitboxes,
       onToggleCullingBounds,
-      onResetCamera
+      onResetCamera,
+      onToggleMute
     );
 
     this.missionSelect?.addEventListener("change", () => this.updateMissionDescription());
@@ -313,7 +316,8 @@ export class UIManager {
     infiniteGold: boolean,
     runResult: RunResult | null,
     missionInfos: MissionSelectInfo[],
-    debugBalanceInfo: DebugBalanceInfo
+    debugBalanceInfo: DebugBalanceInfo,
+    soundMuted: boolean
   ): void {
     this.lastKnownState = state;
     this.missionInfos = missionInfos;
@@ -350,6 +354,7 @@ export class UIManager {
     this.waveInfoButton?.classList.toggle("hidden", state !== "playing");
     this.renderWaveInfoPanel(state);
     this.pauseButton?.classList.toggle("hidden", state !== "playing");
+    this.renderSoundToggle(soundMuted, state);
     if (this.speedSelect) this.speedSelect.value = String(debugBalanceInfo.gameSpeed);
     this.renderDebugPanel(debugBalanceInfo, state);
     this.renderTowerInspector(selectedTowerInfo, state, gold, infiniteGold);
@@ -442,11 +447,11 @@ export class UIManager {
       ];
 
       if (selectedTowerInfo.splashRadius) {
-        stats.push(["Splash", String(selectedTowerInfo.splashRadius)]);
+        stats.push(["Bomb radius", String(selectedTowerInfo.splashRadius)]);
       }
 
       if (selectedTowerInfo.slowAmount && selectedTowerInfo.slowDuration) {
-        stats.push(["Slow", `${Math.round(selectedTowerInfo.slowAmount * 100)}% / ${selectedTowerInfo.slowDuration.toFixed(1)}s`]);
+        stats.push(["Frost", `${Math.round(selectedTowerInfo.slowAmount * 100)}% / ${selectedTowerInfo.slowDuration.toFixed(1)}s`]);
       }
 
       stats.push(["Invested", String(selectedTowerInfo.totalInvestedGold)]);
@@ -500,6 +505,21 @@ export class UIManager {
       this.waveInfoToggle.setAttribute("aria-expanded", String(this.waveInfoOpen));
       this.controlRegistry.setButtonState("wave-info-toggle", { label: this.waveInfoToggle.textContent, visible: shouldShow, enabled: true });
     }
+  }
+
+  private renderSoundToggle(soundMuted: boolean, state: GameState): void {
+    const visible = state !== "menu";
+    this.soundToggleButton?.classList.toggle("hidden", !visible);
+    if (!this.soundToggleButton) return;
+
+    this.soundToggleButton.textContent = soundMuted ? "🔇" : "🔊";
+    this.soundToggleButton.setAttribute("aria-label", soundMuted ? "Unmute sound" : "Mute sound");
+    this.soundToggleButton.setAttribute("aria-pressed", String(soundMuted));
+    this.controlRegistry.setButtonState("sound-toggle", {
+      label: soundMuted ? "Unmute Sound" : "Mute Sound",
+      visible,
+      enabled: true
+    });
   }
 
   private formatTargetingMode(mode: TargetingMode): string {
@@ -616,10 +636,12 @@ export class UIManager {
     onToggleEffects: () => void,
     onToggleDebugHitboxes: () => void,
     onToggleCullingBounds: () => void,
-    onResetCamera: () => void
+    onResetCamera: () => void,
+    onToggleMute: () => void
   ): void {
     this.controlRegistry.registerButton(this.startButton, "start", "Start", () => onStart(this.selectedMissionId, this.selectedDifficultyId));
     this.controlRegistry.registerButton(this.pauseButton, "pause", "Pause", onPause);
+    this.controlRegistry.registerButton(this.soundToggleButton, "sound-toggle", "Mute Sound", onToggleMute);
     this.controlRegistry.registerButton(this.waveInfoButton, "wave-info", "Wave Details", () => {
       this.waveInfoOpen = !this.waveInfoOpen;
       this.renderWaveInfoPanel(this.lastKnownState);

@@ -131,6 +131,7 @@ export class Game {
       () => this.toggleDebugHitboxes(),
       () => this.toggleCullingBounds(),
       () => this.resetCamera(),
+      () => this.toggleMute(),
       (missionId) => this.isMissionUnlocked(missionId)
     );
     this.input = new InputManager(canvas, this);
@@ -146,6 +147,7 @@ export class Game {
   }
 
   startMission(missionId: MissionId, difficultyId: DifficultyId): void {
+    this.sound.unlock();
     if (!this.isMissionUnlocked(missionId)) {
       this.showFeedback("Complete the previous mission to unlock this one.");
       this.updateUi();
@@ -197,18 +199,21 @@ export class Game {
   }
 
   tryPlaceTower(position: Vector2, towerType = this.selectedTowerType): boolean {
+    this.sound.unlock();
     if (this.state !== "playing") return false;
     if (!towerType) return false;
 
     const validation = this.validateTowerPlacement(position, towerType);
     if (!validation.canPlace) {
       this.showFeedback(validation.reason);
+      this.sound.invalidPlacement();
       return false;
     }
 
     const placementCost = TOWER_CONFIGS[towerType].placementCost;
     if (!this.canAfford(placementCost)) {
       this.showFeedback(`Need ${placementCost} gold to place ${TOWER_CONFIGS[towerType].label}.`);
+      this.sound.invalidPlacement();
       return false;
     }
 
@@ -217,11 +222,13 @@ export class Game {
     this.towers.push(tower);
     this.selectedPlacedTower = null;
     this.selectedTowerType = null;
+    this.sound.towerPlaced();
     this.updateUi();
     return true;
   }
 
   handleMapPress(position: Vector2): void {
+    this.sound.unlock();
     if (this.state !== "playing") return;
 
     if (this.selectedTowerType) {
@@ -281,6 +288,7 @@ export class Game {
     this.spendGold(upgradeCost);
     this.selectedPlacedTower.upgrade();
     this.selectedPlacedTower.recordUpgradeCost(upgradeCost);
+    this.sound.towerUpgraded();
     this.updateUi();
   }
 
@@ -295,6 +303,7 @@ export class Game {
     }
     this.selectedPlacedTower = null;
     this.showFeedback(`Sold tower for ${refund} gold.`);
+    this.sound.towerSold();
     this.updateUi();
   }
 
@@ -311,6 +320,7 @@ export class Game {
   }
 
   resume(): void {
+    this.sound.unlock();
     if (this.state !== "paused") return;
     this.state = "playing";
     this.lastTime = performance.now();
@@ -362,6 +372,7 @@ export class Game {
       this.enemies.push(enemy);
       if (request.enemyType === "boss") {
         this.showFeedback("Boss incoming");
+        this.sound.bossSpawn();
         if (this.showEffects) this.effects.addSplash(enemy.position, 100, enemyConfig.color);
         this.triggerScreenShake(0.45, 7);
       }
@@ -751,6 +762,13 @@ export class Game {
     this.updateUi();
   }
 
+  private toggleMute(): void {
+    this.sound.unlock();
+    this.sound.toggleMuted();
+    this.showFeedback(this.sound.isMuted ? "Sound muted" : "Sound on");
+    this.updateUi();
+  }
+
   private skipToNextWave(): void {
     if (this.state !== "playing") return;
     if (this.waveManager.skipToNextWave()) {
@@ -1056,7 +1074,8 @@ export class Game {
       ECONOMY_CONFIG.debugInfiniteGold,
       this.runResult,
       this.progression.getMissionSelectInfo(ECONOMY_CONFIG.debugUnlockAllMissions),
-      this.getDebugBalanceInfo()
+      this.getDebugBalanceInfo(),
+      this.sound.isMuted
     );
   }
 }

@@ -2,7 +2,7 @@ import { TowerConfig, TowerType } from "../types";
 
 export const TOWER_CONFIGS: Record<TowerType, TowerConfig> = {
   basic: {
-    label: "Basic",
+    label: "Canon",
     color: "#4f8cff",
     // Efficient single-target baseline. Keep this useful, but not best at every job.
     placementCost: 55,
@@ -16,7 +16,7 @@ export const TOWER_CONFIGS: Record<TowerType, TowerConfig> = {
     ]
   },
   splash: {
-    label: "Splash",
+    label: "Bomb",
     color: "#f59e0b",
     // High cost and slow shots pay off against clustered/mixed waves.
     placementCost: 85,
@@ -30,7 +30,7 @@ export const TOWER_CONFIGS: Record<TowerType, TowerConfig> = {
     ]
   },
   slow: {
-    label: "Slow",
+    label: "Frost",
     color: "#22c55e",
     // Low damage support tower that creates strategic value through speed control.
     placementCost: 70,
