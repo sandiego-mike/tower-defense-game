@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Tower Defense MVP</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="Tower defense game canvas"></canvas>
+
+      <div id="loading-screen" class="loading-screen">
+        <section class="start-panel" aria-label="Loading">
+          <h1>Prototype Forest Defense</h1>
+          <p id="loading-status" class="mission-description">Loading assets...</p>
+        </section>
+      </div>
+
+      <div id="hud" class="hud">
+        <div class="hud-group hud-primary">
+          <div class="hud-metric"><span>Life</span><strong id="life-value">100%</strong></div>
+          <div class="hud-metric"><span>Gold</span><strong id="gold-value">0</strong></div>
+          <div class="hud-metric"><span>Wave</span><strong id="wave-value">1 / 5</strong></div>
+        </div>
+        <div class="hud-group hud-mission">
+          <strong id="mission-value">Green Pass</strong>
+          <span id="difficulty-value">Normal</span>
+        </div>
+        <div class="hud-actions">
+          <button id="pause-button" class="small-button icon-button" type="button" aria-label="Pause">⏸</button>
+          <label class="speed-control" for="speed-select">
+            <span class="speed-label">Speed</span>
+            <select id="speed-select">
+              <option value="1">1x</option>
+              <option value="2">2x</option>
+              <option value="4">4x</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <button id="wave-info-button" class="wave-info-button" type="button" aria-expanded="false" aria-label="Wave Details">≡</button>
+
+      <div id="wave-info-panel" class="wave-info-panel hidden" aria-label="Wave information">
+        <button id="wave-info-toggle" class="wave-info-toggle" type="button" aria-expanded="false">Wave Details</button>
+        <div id="wave-info-content" class="wave-info-content">
+          <div><span>Enemies</span><strong id="enemies-value">None</strong></div>
+          <div><span>Remaining</span><strong id="remaining-value">0</strong></div>
+          <div><span>Next</span><strong id="countdown-value">-</strong></div>
+        </div>
+      </div>
+
+      <div id="tower-palette" class="tower-palette" aria-label="Tower selection">
+        <button class="tower-button" data-tower="basic" type="button">
+          <span class="tower-chip basic"></span>
+          Basic
+        </button>
+        <button class="tower-button" data-tower="splash" type="button">
+          <span class="tower-chip splash"></span>
+          Splash
+        </button>
+        <button class="tower-button" data-tower="slow" type="button">
+          <span class="tower-chip slow"></span>
+          Slow
+        </button>
+        <button id="cancel-placement-button" class="cancel-placement-button hidden" type="button" aria-label="Cancel placement">×</button>
+      </div>
+
+      <div id="tower-inspector" class="tower-inspector hidden" aria-label="Selected tower">
+        <div class="tower-inspector-header">
+          <span class="inspector-label">Tower</span>
+          <strong id="tower-info">No tower selected</strong>
+        </div>
+        <div id="tower-stats" class="tower-stats"></div>
+        <label for="targeting-select">
+          <span class="inspector-label">Targeting</span>
+          <select id="targeting-select"></select>
+        </label>
+        <button id="upgrade-button" class="upgrade-button" type="button">Upgrade</button>
+        <button id="sell-button" class="secondary-button" type="button">Sell</button>
+      </div>
+
+      <div id="start-screen" class="start-screen">
+        <section class="start-panel" aria-label="Game setup">
+          <h1>Tower Defense MVP</h1>
+          <label for="mission-select">Mission</label>
+          <select id="mission-select"></select>
+          <p id="mission-description" class="mission-description"></p>
+          <p id="mission-progress" class="mission-description"></p>
+
+          <label for="difficulty-select">Difficulty</label>
+          <select id="difficulty-select"></select>
+
+          <button id="start-button" class="start-button" type="button">Start Game</button>
+        </section>
+      </div>
+
+      <div id="toast" class="toast hidden"></div>
+
+      <div id="debug-panel" class="debug-panel hidden" aria-label="Balance debug panel">
+        <strong>Balance Debug</strong>
+        <pre id="debug-content"></pre>
+        <div class="debug-toggle-row" aria-label="Performance debug toggles">
+          <button id="debug-health-bars-button" class="debug-toggle-button" type="button">Health Bars On</button>
+          <button id="debug-effects-button" class="debug-toggle-button" type="button">Effects On</button>
+          <button id="debug-hitboxes-button" class="debug-toggle-button" type="button">Hitboxes Off</button>
+          <button id="debug-culling-button" class="debug-toggle-button" type="button">Cull Bounds Off</button>
+        </div>
+      </div>
+
+      <div id="message" class="message hidden">
+        <div id="message-title"></div>
+        <div id="message-body" class="message-body"></div>
+        <div class="message-actions">
+          <button id="message-resume-button" class="start-button" type="button">Resume</button>
+          <button id="message-restart-button" class="start-button" type="button">Restart Mission</button>
+          <button id="message-menu-button" class="secondary-button" type="button">Mission Select</button>
+          <button id="message-skip-wave-button" class="secondary-button hidden" type="button">Skip Wave</button>
+          <button id="message-debug-button" class="secondary-button hidden" type="button">Debug</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
