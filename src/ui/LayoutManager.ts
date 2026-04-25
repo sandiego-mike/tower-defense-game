@@ -1,0 +1,360 @@
+export type LayoutMode = "desktop" | "tablet" | "mobilePortrait" | "mobileLandscape";
+
+interface SafeAreaInsets {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+interface MeasuredViewport {
+  width: number;
+  height: number;
+  innerWidth: number;
+  innerHeight: number;
+  safeArea: SafeAreaInsets;
+  availableWidth: number;
+  availableHeight: number;
+  aspectRatio: number;
+  hasTouch: boolean;
+}
+
+type CanvasFit = "center" | "portrait-top";
+
+interface LayoutProfile {
+  mode: LayoutMode;
+  canvasFit: CanvasFit;
+  cssVars: Record<string, string>;
+}
+
+export interface AppliedLayout {
+  mode: LayoutMode;
+  profile: LayoutProfile;
+  viewport: MeasuredViewport;
+  canvasDisplay: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    scale: number;
+  };
+}
+
+const LAYOUT_CLASS_NAMES: Record<LayoutMode, string> = {
+  desktop: "layout-desktop",
+  tablet: "layout-tablet",
+  mobilePortrait: "layout-mobilePortrait",
+  mobileLandscape: "layout-mobileLandscape"
+};
+
+export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
+  desktop: {
+    mode: "desktop",
+    canvasFit: "center",
+    cssVars: {
+      "--hud-top": "12px",
+      "--hud-side": "12px",
+      "--hud-gap": "8px",
+      "--hud-group-min-height": "38px",
+      "--hud-group-padding": "6px",
+      "--hud-group-gap": "6px",
+      "--hud-metric-padding": "2px 6px",
+      "--hud-label-font": "10px",
+      "--hud-value-font": "13px",
+      "--mission-font": "14px",
+      "--mission-sub-font": "12px",
+      "--icon-button-size": "36px",
+      "--icon-button-font": "18px",
+      "--speed-min-height": "34px",
+      "--speed-padding": "0 8px",
+      "--speed-gap": "6px",
+      "--speed-select-width": "62px",
+      "--speed-select-min-height": "28px",
+      "--speed-font": "13px",
+      "--wave-button-top": "70px",
+      "--wave-button-left": "12px",
+      "--wave-button-size": "34px",
+      "--wave-panel-top": "108px",
+      "--wave-panel-left": "12px",
+      "--wave-panel-width": "300px",
+      "--tower-bar-width": "420px",
+      "--tower-bar-bottom": "12px",
+      "--tower-bar-min-height": "52px",
+      "--tower-bar-padding": "7px",
+      "--tower-bar-gap": "7px",
+      "--tower-button-min-height": "auto",
+      "--tower-button-padding": "8px 6px",
+      "--tower-button-font": "inherit",
+      "--tower-button-gap": "6px",
+      "--tower-chip-size": "16px",
+      "--tower-inspector-bottom": "auto",
+      "--tower-inspector-max-height": "min(70vh, 520px)"
+    }
+  },
+  tablet: {
+    mode: "tablet",
+    canvasFit: "center",
+    cssVars: {
+      "--hud-top": "10px",
+      "--hud-side": "10px",
+      "--hud-gap": "6px",
+      "--hud-group-min-height": "34px",
+      "--hud-group-padding": "5px",
+      "--hud-group-gap": "5px",
+      "--hud-metric-padding": "2px 5px",
+      "--hud-label-font": "9px",
+      "--hud-value-font": "12px",
+      "--mission-font": "13px",
+      "--mission-sub-font": "11px",
+      "--icon-button-size": "34px",
+      "--icon-button-font": "17px",
+      "--speed-min-height": "32px",
+      "--speed-padding": "0 7px",
+      "--speed-gap": "5px",
+      "--speed-select-width": "58px",
+      "--speed-select-min-height": "26px",
+      "--speed-font": "12px",
+      "--wave-button-top": "64px",
+      "--wave-button-left": "10px",
+      "--wave-button-size": "32px",
+      "--wave-panel-top": "100px",
+      "--wave-panel-left": "10px",
+      "--wave-panel-width": "280px",
+      "--tower-bar-width": "420px",
+      "--tower-bar-bottom": "12px",
+      "--tower-bar-min-height": "52px",
+      "--tower-bar-padding": "7px",
+      "--tower-bar-gap": "7px",
+      "--tower-button-min-height": "auto",
+      "--tower-button-padding": "8px 6px",
+      "--tower-button-font": "inherit",
+      "--tower-button-gap": "6px",
+      "--tower-chip-size": "16px",
+      "--tower-inspector-bottom": "auto",
+      "--tower-inspector-max-height": "min(70vh, 520px)"
+    }
+  },
+  mobilePortrait: {
+    mode: "mobilePortrait",
+    canvasFit: "portrait-top",
+    cssVars: {
+      "--hud-top": "6px",
+      "--hud-side": "6px",
+      "--hud-gap": "4px",
+      "--hud-group-min-height": "28px",
+      "--hud-group-padding": "3px",
+      "--hud-group-gap": "3px",
+      "--hud-metric-padding": "1px 3px",
+      "--hud-label-font": "7px",
+      "--hud-value-font": "10px",
+      "--mission-font": "10px",
+      "--mission-sub-font": "8px",
+      "--icon-button-size": "28px",
+      "--icon-button-font": "14px",
+      "--speed-min-height": "28px",
+      "--speed-padding": "0 4px",
+      "--speed-gap": "3px",
+      "--speed-select-width": "48px",
+      "--speed-select-min-height": "23px",
+      "--speed-font": "11px",
+      "--wave-button-top": "58px",
+      "--wave-button-left": "6px",
+      "--wave-button-size": "28px",
+      "--wave-panel-top": "90px",
+      "--wave-panel-left": "6px",
+      "--wave-panel-width": "250px",
+      "--tower-bar-width": "360px",
+      "--tower-bar-bottom": "max(8px, var(--safe-area-bottom, 0px))",
+      "--tower-bar-min-height": "48px",
+      "--tower-bar-padding": "6px",
+      "--tower-bar-gap": "5px",
+      "--tower-button-min-height": "44px",
+      "--tower-button-padding": "6px 4px",
+      "--tower-button-font": "11px",
+      "--tower-button-gap": "4px",
+      "--tower-chip-size": "14px",
+      "--tower-inspector-bottom": "88px",
+      "--tower-inspector-max-height": "300px"
+    }
+  },
+  mobileLandscape: {
+    mode: "mobileLandscape",
+    canvasFit: "center",
+    cssVars: {
+      "--hud-top": "max(6px, var(--safe-area-top, 0px))",
+      "--hud-side": "max(8px, var(--safe-area-left, 0px), var(--safe-area-right, 0px))",
+      "--hud-gap": "5px",
+      "--hud-group-min-height": "30px",
+      "--hud-group-padding": "4px",
+      "--hud-group-gap": "4px",
+      "--hud-metric-padding": "1px 4px",
+      "--hud-label-font": "8px",
+      "--hud-value-font": "11px",
+      "--mission-font": "11px",
+      "--mission-sub-font": "9px",
+      "--icon-button-size": "30px",
+      "--icon-button-font": "15px",
+      "--speed-min-height": "30px",
+      "--speed-padding": "0 5px",
+      "--speed-gap": "4px",
+      "--speed-select-width": "48px",
+      "--speed-select-min-height": "24px",
+      "--speed-font": "12px",
+      "--wave-button-top": "62px",
+      "--wave-button-left": "max(8px, var(--safe-area-left, 0px))",
+      "--wave-button-size": "30px",
+      "--wave-panel-top": "96px",
+      "--wave-panel-left": "max(8px, var(--safe-area-left, 0px))",
+      "--wave-panel-width": "250px",
+      "--tower-bar-width": "360px",
+      "--tower-bar-bottom": "max(8px, var(--safe-area-bottom, 0px))",
+      "--tower-bar-min-height": "48px",
+      "--tower-bar-padding": "6px",
+      "--tower-bar-gap": "5px",
+      "--tower-button-min-height": "44px",
+      "--tower-button-padding": "6px 4px",
+      "--tower-button-font": "11px",
+      "--tower-button-gap": "4px",
+      "--tower-chip-size": "14px",
+      "--tower-inspector-bottom": "88px",
+      "--tower-inspector-max-height": "260px"
+    }
+  }
+};
+
+export class LayoutManager {
+  private safeAreaProbe: HTMLDivElement | null = null;
+
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    private readonly gameWidth: number,
+    private readonly gameHeight: number
+  ) {}
+
+  apply(): AppliedLayout {
+    const viewport = this.measureViewport();
+    const mode = this.detectMode(viewport);
+    const profile = layoutProfiles[mode];
+    const canvasDisplay = this.fitCanvas(viewport, profile);
+
+    this.applyModeClass(mode);
+    this.applyCssVars(profile, viewport, canvasDisplay);
+    this.applyCanvasStyle(canvasDisplay);
+
+    return { mode, profile, viewport, canvasDisplay };
+  }
+
+  measureViewport(): MeasuredViewport {
+    const visualViewport = window.visualViewport;
+    const width = visualViewport?.width ?? window.innerWidth;
+    const height = visualViewport?.height ?? window.innerHeight;
+    const safeArea = this.getSafeAreaInsets();
+    const hasTouch = navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
+
+    return {
+      width,
+      height,
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      safeArea,
+      availableWidth: Math.max(1, width - safeArea.left - safeArea.right),
+      availableHeight: Math.max(1, height - safeArea.top - safeArea.bottom),
+      aspectRatio: width / Math.max(1, height),
+      hasTouch
+    };
+  }
+
+  detectMode(viewport = this.measureViewport()): LayoutMode {
+    const isPortrait = viewport.height >= viewport.width;
+
+    if (viewport.hasTouch && isPortrait && viewport.width <= 700) {
+      return "mobilePortrait";
+    }
+
+    if (viewport.hasTouch && !isPortrait && viewport.height <= 560) {
+      return "mobileLandscape";
+    }
+
+    if (viewport.width <= 1024 || viewport.hasTouch) {
+      return "tablet";
+    }
+
+    return "desktop";
+  }
+
+  private getSafeAreaInsets(): SafeAreaInsets {
+    if (!this.safeAreaProbe) {
+      this.safeAreaProbe = document.createElement("div");
+      this.safeAreaProbe.style.position = "fixed";
+      this.safeAreaProbe.style.inset = "0";
+      this.safeAreaProbe.style.visibility = "hidden";
+      this.safeAreaProbe.style.pointerEvents = "none";
+      this.safeAreaProbe.style.paddingTop = "env(safe-area-inset-top)";
+      this.safeAreaProbe.style.paddingRight = "env(safe-area-inset-right)";
+      this.safeAreaProbe.style.paddingBottom = "env(safe-area-inset-bottom)";
+      this.safeAreaProbe.style.paddingLeft = "env(safe-area-inset-left)";
+      document.body.appendChild(this.safeAreaProbe);
+    }
+
+    const styles = window.getComputedStyle(this.safeAreaProbe);
+    return {
+      top: parseFloat(styles.paddingTop) || 0,
+      right: parseFloat(styles.paddingRight) || 0,
+      bottom: parseFloat(styles.paddingBottom) || 0,
+      left: parseFloat(styles.paddingLeft) || 0
+    };
+  }
+
+  private fitCanvas(viewport: MeasuredViewport, profile: LayoutProfile): AppliedLayout["canvasDisplay"] {
+    const scale = Math.min(viewport.availableWidth / this.gameWidth, viewport.availableHeight / this.gameHeight);
+    const width = this.gameWidth * scale;
+    const height = this.gameHeight * scale;
+    const centeredTop = (viewport.availableHeight - height) / 2;
+    const y = profile.canvasFit === "portrait-top" ? Math.min(Math.max(44, viewport.availableHeight * 0.08), centeredTop) : centeredTop;
+
+    return {
+      x: (viewport.availableWidth - width) / 2,
+      y,
+      width,
+      height,
+      scale
+    };
+  }
+
+  private applyModeClass(mode: LayoutMode): void {
+    const root = document.documentElement;
+    for (const className of Object.values(LAYOUT_CLASS_NAMES)) {
+      root.classList.remove(className);
+    }
+    root.classList.add(LAYOUT_CLASS_NAMES[mode]);
+    root.dataset.layoutMode = mode;
+  }
+
+  private applyCssVars(profile: LayoutProfile, viewport: MeasuredViewport, canvasDisplay: AppliedLayout["canvasDisplay"]): void {
+    const style = document.documentElement.style;
+    style.setProperty("--visual-viewport-width", `${viewport.width}px`);
+    style.setProperty("--visual-viewport-height", `${viewport.height}px`);
+    style.setProperty("--safe-area-top", `${viewport.safeArea.top}px`);
+    style.setProperty("--safe-area-right", `${viewport.safeArea.right}px`);
+    style.setProperty("--safe-area-bottom", `${viewport.safeArea.bottom}px`);
+    style.setProperty("--safe-area-left", `${viewport.safeArea.left}px`);
+    style.setProperty("--game-canvas-top", `${canvasDisplay.y}px`);
+    style.setProperty("--game-canvas-left", `${canvasDisplay.x}px`);
+    style.setProperty("--game-canvas-display-width", `${canvasDisplay.width}px`);
+    style.setProperty("--game-canvas-display-height", `${canvasDisplay.height}px`);
+    style.setProperty("--game-canvas-scale", `${canvasDisplay.scale}`);
+    style.setProperty("--portrait-tower-top", `${canvasDisplay.y + canvasDisplay.height + 8}px`);
+
+    for (const [name, value] of Object.entries(profile.cssVars)) {
+      style.setProperty(name, value);
+    }
+  }
+
+  private applyCanvasStyle(canvasDisplay: AppliedLayout["canvasDisplay"]): void {
+    this.canvas.style.position = "absolute";
+    this.canvas.style.width = `${canvasDisplay.width}px`;
+    this.canvas.style.height = `${canvasDisplay.height}px`;
+    this.canvas.style.left = `${canvasDisplay.x}px`;
+    this.canvas.style.top = `${canvasDisplay.y}px`;
+  }
+}
