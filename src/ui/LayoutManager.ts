@@ -19,7 +19,7 @@ interface MeasuredViewport {
   hasTouch: boolean;
 }
 
-type CanvasFit = "center" | "portrait-top" | "portrait-cover";
+type CanvasFit = "center" | "portrait-top";
 
 interface LayoutProfile {
   mode: LayoutMode;
@@ -196,7 +196,7 @@ export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
   },
   mobilePortrait: {
     mode: "mobilePortrait",
-    canvasFit: "portrait-cover",
+    canvasFit: "portrait-top",
     cssVars: {
       "--hud-top": "4px",
       "--hud-scale": "0.65",
@@ -426,10 +426,7 @@ export class LayoutManager {
   }
 
   private fitCanvas(viewport: MeasuredViewport, profile: LayoutProfile): AppliedLayout["canvasDisplay"] {
-    const scale =
-      profile.canvasFit === "portrait-cover"
-        ? Math.max(viewport.availableWidth / this.gameWidth, viewport.availableHeight / this.gameHeight)
-        : Math.min(viewport.availableWidth / this.gameWidth, viewport.availableHeight / this.gameHeight);
+    const scale = Math.min(viewport.availableWidth / this.gameWidth, viewport.availableHeight / this.gameHeight);
     const width = this.gameWidth * scale;
     const height = this.gameHeight * scale;
     const centeredTop = (viewport.availableHeight - height) / 2;
