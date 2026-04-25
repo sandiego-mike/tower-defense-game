@@ -22,6 +22,7 @@ const layoutManager = new LayoutManager(gameCanvas, GAME_WIDTH, GAME_HEIGHT);
 let viewportResizeTimer = 0;
 const debugViewportEnabled = new URLSearchParams(window.location.search).get("debugViewport") === "1";
 let viewportDebugOverlay: HTMLPreElement | null = null;
+let layoutDebugLabel: HTMLDivElement | null = null;
 let lastLayout = layoutManager.apply();
 
 function createViewportDebugOverlay(): HTMLPreElement {
@@ -35,6 +36,17 @@ function createViewportDebugOverlay(): HTMLPreElement {
   return overlay;
 }
 
+function createLayoutDebugLabel(): HTMLDivElement {
+  const existing = document.querySelector<HTMLDivElement>("#layout-debug-label");
+  if (existing) return existing;
+
+  const label = document.createElement("div");
+  label.id = "layout-debug-label";
+  label.className = "layout-debug-label";
+  document.body.appendChild(label);
+  return label;
+}
+
 function collectViewportDiagnostics(label: string, layout: AppliedLayout = lastLayout): Record<string, unknown> {
   const canvasRect = gameCanvas.getBoundingClientRect();
   const appRect = appContainer?.getBoundingClientRect();
@@ -46,6 +58,7 @@ function collectViewportDiagnostics(label: string, layout: AppliedLayout = lastL
     orientation,
     layoutMode: layout.mode,
     canvasFit: layout.profile.canvasFit,
+    appliedCssVars: layout.profile.cssVars,
     cssMedia: {
       mobileMax420: window.matchMedia("(max-width: 420px)").matches,
       mobileMax560: window.matchMedia("(max-width: 560px)").matches,
@@ -123,6 +136,15 @@ function updateViewportDiagnostics(label: string): void {
   console.info("[viewport diagnostics]", diagnostics);
   viewportDebugOverlay ??= createViewportDebugOverlay();
   viewportDebugOverlay.textContent = JSON.stringify(diagnostics, null, 2);
+  layoutDebugLabel ??= createLayoutDebugLabel();
+  layoutDebugLabel.textContent = [
+    `layout: ${lastLayout.mode}`,
+    `viewport: ${Math.round(lastLayout.viewport.width)} x ${Math.round(lastLayout.viewport.height)}`,
+    `classes: ${document.documentElement.className || "(none)"}`,
+    `hud: ${lastLayout.profile.cssVars["--hud-scale"]} mission: ${lastLayout.profile.cssVars["--mission-scale"]} controls: ${lastLayout.profile.cssVars["--controls-scale"]}`,
+    `tower: ${lastLayout.profile.cssVars["--tower-bar-scale"]}`,
+    `gap: ${lastLayout.profile.cssVars["--hud-gap"]} towerGap: ${lastLayout.profile.cssVars["--tower-bar-gap"]}`
+  ].join("\n");
 }
 
 function logMobileStartupDiagnostics(label: string): void {

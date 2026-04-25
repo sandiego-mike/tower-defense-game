@@ -53,6 +53,10 @@ export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
     canvasFit: "center",
     cssVars: {
       "--hud-top": "12px",
+      "--hud-scale": "1",
+      "--mission-scale": "1",
+      "--controls-scale": "1",
+      "--tower-bar-scale": "1",
       "--hud-side": "12px",
       "--hud-gap": "8px",
       "--hud-group-min-height": "38px",
@@ -96,6 +100,10 @@ export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
     canvasFit: "center",
     cssVars: {
       "--hud-top": "10px",
+      "--hud-scale": "1",
+      "--mission-scale": "1",
+      "--controls-scale": "1",
+      "--tower-bar-scale": "1",
       "--hud-side": "10px",
       "--hud-gap": "6px",
       "--hud-group-min-height": "34px",
@@ -138,12 +146,16 @@ export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
     mode: "mobilePortrait",
     canvasFit: "portrait-top",
     cssVars: {
-      "--hud-top": "6px",
+      "--hud-top": "4px",
+      "--hud-scale": "0.75",
+      "--mission-scale": "0.75",
+      "--controls-scale": "0.75",
+      "--tower-bar-scale": "0.75",
       "--hud-side": "6px",
-      "--hud-gap": "4px",
+      "--hud-gap": "3px",
       "--hud-group-min-height": "28px",
-      "--hud-group-padding": "3px",
-      "--hud-group-gap": "3px",
+      "--hud-group-padding": "2px",
+      "--hud-group-gap": "2px",
       "--hud-metric-padding": "1px 3px",
       "--hud-label-font": "7px",
       "--hud-value-font": "10px",
@@ -157,17 +169,17 @@ export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
       "--speed-select-width": "48px",
       "--speed-select-min-height": "23px",
       "--speed-font": "11px",
-      "--wave-button-top": "58px",
+      "--wave-button-top": "48px",
       "--wave-button-left": "6px",
       "--wave-button-size": "28px",
-      "--wave-panel-top": "90px",
+      "--wave-panel-top": "80px",
       "--wave-panel-left": "6px",
       "--wave-panel-width": "250px",
       "--tower-bar-width": "360px",
       "--tower-bar-bottom": "max(8px, var(--safe-area-bottom, 0px))",
       "--tower-bar-min-height": "48px",
-      "--tower-bar-padding": "6px",
-      "--tower-bar-gap": "5px",
+      "--tower-bar-padding": "5px",
+      "--tower-bar-gap": "4px",
       "--tower-button-min-height": "44px",
       "--tower-button-padding": "6px 4px",
       "--tower-button-font": "11px",
@@ -182,11 +194,15 @@ export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
     canvasFit: "center",
     cssVars: {
       "--hud-top": "max(6px, var(--safe-area-top, 0px))",
+      "--hud-scale": "0.8",
+      "--mission-scale": "0.8",
+      "--controls-scale": "0.8",
+      "--tower-bar-scale": "0.75",
       "--hud-side": "max(8px, var(--safe-area-left, 0px), var(--safe-area-right, 0px))",
-      "--hud-gap": "5px",
+      "--hud-gap": "4px",
       "--hud-group-min-height": "30px",
-      "--hud-group-padding": "4px",
-      "--hud-group-gap": "4px",
+      "--hud-group-padding": "3px",
+      "--hud-group-gap": "3px",
       "--hud-metric-padding": "1px 4px",
       "--hud-label-font": "8px",
       "--hud-value-font": "11px",
@@ -209,8 +225,8 @@ export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
       "--tower-bar-width": "360px",
       "--tower-bar-bottom": "max(8px, var(--safe-area-bottom, 0px))",
       "--tower-bar-min-height": "48px",
-      "--tower-bar-padding": "6px",
-      "--tower-bar-gap": "5px",
+      "--tower-bar-padding": "5px",
+      "--tower-bar-gap": "4px",
       "--tower-button-min-height": "44px",
       "--tower-button-padding": "6px 4px",
       "--tower-button-font": "11px",
@@ -322,12 +338,16 @@ export class LayoutManager {
   }
 
   private applyModeClass(mode: LayoutMode): void {
-    const root = document.documentElement;
+    const elements = [document.documentElement, document.body, this.canvas.closest("#app")].filter(Boolean) as HTMLElement[];
     for (const className of Object.values(LAYOUT_CLASS_NAMES)) {
-      root.classList.remove(className);
+      for (const element of elements) {
+        element.classList.remove(className);
+      }
     }
-    root.classList.add(LAYOUT_CLASS_NAMES[mode]);
-    root.dataset.layoutMode = mode;
+    for (const element of elements) {
+      element.classList.add(LAYOUT_CLASS_NAMES[mode]);
+      element.dataset.layoutMode = mode;
+    }
   }
 
   private applyCssVars(profile: LayoutProfile, viewport: MeasuredViewport, canvasDisplay: AppliedLayout["canvasDisplay"]): void {

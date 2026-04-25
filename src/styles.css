@@ -108,10 +108,14 @@ select {
 .hud-actions {
   justify-self: end;
   pointer-events: auto;
+  transform: scale(var(--controls-scale, 1));
+  transform-origin: top right;
 }
 
 .hud-primary {
   justify-self: start;
+  transform: scale(var(--hud-scale, 1));
+  transform-origin: top left;
 }
 
 .hud-mission {
@@ -119,6 +123,8 @@ select {
   justify-content: center;
   gap: 8px;
   text-align: center;
+  transform: scale(var(--mission-scale, 1));
+  transform-origin: top center;
 }
 
 .hud-mission strong {
@@ -286,7 +292,8 @@ select {
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.88);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(var(--tower-bar-scale, 1));
+  transform-origin: bottom center;
   touch-action: none;
   z-index: 13;
 }
@@ -701,7 +708,7 @@ select {
 
 .viewport-debug-overlay {
   position: fixed;
-  top: 8px;
+  top: 84px;
   left: 8px;
   z-index: 60;
   width: min(420px, calc(100vw - 16px));
@@ -714,6 +721,22 @@ select {
   background: rgba(8, 13, 20, 0.92);
   color: #e0f2fe;
   font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  pointer-events: none;
+  white-space: pre-wrap;
+}
+
+.layout-debug-label {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 61;
+  max-width: min(420px, calc(100vw - 16px));
+  padding: 8px 10px;
+  border: 1px solid rgba(251, 191, 36, 0.7);
+  border-radius: 8px;
+  background: rgba(8, 13, 20, 0.94);
+  color: #fef3c7;
+  font: 12px/1.25 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   pointer-events: none;
   white-space: pre-wrap;
 }
