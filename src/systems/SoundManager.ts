@@ -328,15 +328,27 @@ export class SoundManager {
   }
 
   private async unlockWebAudio(): Promise<void> {
-    const context = await this.resumeAudioContext();
-    const buffer = context.createBuffer(1, 1, 22050);
-    const source = context.createBufferSource();
-    const gain = context.createGain();
-    gain.gain.value = 0.00001;
-    source.buffer = buffer;
-    source.connect(gain);
-    gain.connect(context.destination);
-    source.start(0);
+    // iOS Safari only unlocks the AudioContext when the priming buffer is
+    // started inside the same synchronous frame as the user gesture. Any
+    // `await` before `source.start(0)` defers it to a microtask and the
+    // gesture credit is lost, leaving the context permanently suspended.
+    const context = this.getAudioContext();
+    try {
+      const buffer = context.createBuffer(1, 1, 22050);
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      gain.gain.value = 0.00001;
+      source.buffer = buffer;
+      source.connect(gain);
+      gain.connect(context.destination);
+      source.start(0);
+    } catch {
+      this.debug("silent prime failed");
+    }
+
+    if (context.state === "suspended") {
+      await context.resume();
+    }
   }
 
   private async unlockFallbackAudio(): Promise<void> {
