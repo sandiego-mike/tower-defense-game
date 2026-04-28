@@ -469,8 +469,22 @@ export class SoundManager {
 
   private hasWebAudioSupport(): boolean {
     if (typeof window === "undefined") return false;
+    // iOS Safari (including standalone PWAs) routes Web Audio through policies
+    // that often leave the context "running" while producing no audible
+    // output — silent switch, audio session category, suspend-on-background,
+    // etc. HTMLAudioElement plays through the standard media path and has been
+    // reliable on iOS for years, so we fall back to it there.
+    if (this.isIOS()) return false;
     const audioWindow = window as AudioContextWindow;
     return Boolean((audioWindow.AudioContext || audioWindow.webkitAudioContext) && typeof fetch !== "undefined");
+  }
+
+  private isIOS(): boolean {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || "";
+    if (/iPad|iPhone|iPod/.test(ua)) return true;
+    // iPadOS 13+ reports as Macintosh in the UA string; disambiguate via touch.
+    return /Macintosh/.test(ua) && (navigator.maxTouchPoints ?? 0) > 1;
   }
 
   private decodedBufferCount(): number {

@@ -228,8 +228,12 @@ export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
       "--start-description-font": "12px",
       "--start-button-min-height": "44px",
       "--start-button-margin-top": "10px",
-      "--icon-button-size": "44px",
-      "--icon-button-font": "18px",
+      // .hud-actions applies transform: scale(--controls-scale, 0.65) on mobilePortrait.
+      // iOS suppresses synthesized clicks when finger movement exceeds the cancel
+      // threshold relative to the hit box, so the post-scale tap target needs to
+      // clear ~44px (Apple HIG). 68px * 0.65 ≈ 44px.
+      "--icon-button-size": "68px",
+      "--icon-button-font": "26px",
       "--speed-min-height": "44px",
       "--speed-padding": "0 6px",
       "--speed-gap": "4px",
@@ -301,8 +305,10 @@ export const layoutProfiles: Record<LayoutMode, LayoutProfile> = {
       "--start-description-font": "11px",
       "--start-button-min-height": "40px",
       "--start-button-margin-top": "8px",
-      "--icon-button-size": "30px",
-      "--icon-button-font": "15px",
+      // .hud-actions scales by --controls-scale (0.8) on mobileLandscape.
+      // 56px * 0.8 ≈ 44px hit area to satisfy iOS minimum tap target.
+      "--icon-button-size": "56px",
+      "--icon-button-font": "22px",
       "--speed-min-height": "30px",
       "--speed-padding": "0 5px",
       "--speed-gap": "4px",
