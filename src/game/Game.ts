@@ -15,6 +15,7 @@ import { EffectManager } from "../systems/EffectManager";
 import { PathManager } from "../systems/PathManager";
 import { ProgressionManager } from "../systems/ProgressionManager";
 import { SoundManager } from "../systems/SoundManager";
+import { AmbientKey } from "../config/sounds";
 import { estimateTowerDps, validateBalance } from "../systems/BalanceValidator";
 import { ViewZoom } from "../systems/ViewZoom";
 import { WaveManager } from "../systems/WaveManager";
@@ -158,6 +159,7 @@ export class Game {
       return;
     }
 
+    this.sound.stopAllLoops();
     this.missionId = missionId;
     this.difficultyId = difficultyId;
     this.selectedTowerType = null;
@@ -179,6 +181,7 @@ export class Game {
     this.screenShakeIntensity = 0;
     this.buildPath();
     this.resetCamera(true);
+    this.sound.fadeInLoop(this.getAmbientKeyForMission(missionId), 1200);
     this.updateUi();
   }
 
@@ -346,6 +349,7 @@ export class Game {
   pause(): void {
     if (this.state !== "playing") return;
     this.state = "paused";
+    this.sound.pauseAllLoops();
     this.updateUi();
   }
 
@@ -354,6 +358,7 @@ export class Game {
     if (this.state !== "paused") return;
     this.state = "playing";
     this.lastTime = performance.now();
+    this.sound.resumeAllLoops();
     this.updateUi();
   }
 
@@ -362,6 +367,7 @@ export class Game {
   }
 
   returnToMenu(): void {
+    this.sound.fadeOutAllLoops(800);
     this.state = "menu";
     this.towers.length = 0;
     this.enemies.length = 0;
@@ -661,7 +667,11 @@ export class Game {
         if (!this.enemies[index].reachedBase) {
           this.gold += this.enemies[index].reward;
           this.enemiesDefeated += 1;
-          this.sound.enemyDestroyed();
+          if (this.enemies[index].config.id === "boss") {
+            this.sound.bossDestroyed();
+          } else {
+            this.sound.enemyDestroyed();
+          }
         }
         this.enemies.splice(index, 1);
       }
@@ -687,6 +697,7 @@ export class Game {
   private checkEndState(): void {
     if (this.life <= 0) {
       if (this.state !== "lost") {
+        this.sound.fadeOutAllLoops(1500);
         this.sound.defeat();
         this.triggerScreenShake(0.5, 7);
       }
@@ -698,6 +709,7 @@ export class Game {
       if (this.state !== "won") {
         this.runResult = this.calculateRunResult();
         this.progression.completeMission(this.missionId, this.runResult.score, this.runResult.stars);
+        this.sound.fadeOutAllLoops(1500);
         this.sound.victory();
         this.triggerScreenShake(0.4, 4);
       }
@@ -1059,6 +1071,16 @@ export class Game {
         dps: estimateTowerDps(tower)
       }))
     };
+  }
+
+  private getAmbientKeyForMission(missionId: MissionId): AmbientKey {
+    const themeId = MISSION_CONFIGS[missionId].themeId;
+    const map: Record<string, AmbientKey> = {
+      forest: "forest-ambient",
+      desert: "desert-ambient",
+      lava: "lava-ambient"
+    };
+    return map[themeId] ?? "forest-ambient";
   }
 
   private reportBalanceValidation(): void {
