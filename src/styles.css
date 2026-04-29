@@ -620,6 +620,59 @@ select {
   z-index: 13;
 }
 
+.zoom-controls {
+  display: none;
+  position: absolute;
+  right: max(8px, var(--safe-area-right, 0px));
+  top: var(--wave-button-top, 62px);
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: auto;
+  z-index: 14;
+}
+
+.layout-mobilePortrait .zoom-controls,
+.layout-mobileLandscape .zoom-controls {
+  display: flex;
+}
+
+.zoom-controls.hidden {
+  display: none;
+}
+
+.zoom-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #f8fafc;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.zoom-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.zoom-button.zoom-reset {
+  font-size: 18px;
+}
+
+.layout-mobilePortrait .zoom-button {
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+}
+
 .wave-info-button {
   position: absolute;
   top: var(--wave-button-top, 70px);

@@ -16,6 +16,7 @@ import { PathManager } from "../systems/PathManager";
 import { ProgressionManager } from "../systems/ProgressionManager";
 import { SoundManager } from "../systems/SoundManager";
 import { estimateTowerDps, validateBalance } from "../systems/BalanceValidator";
+import { ViewZoom } from "../systems/ViewZoom";
 import { WaveManager } from "../systems/WaveManager";
 import { UIManager } from "../ui/UIManager";
 import {
@@ -46,6 +47,7 @@ export class Game {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly pathManager = new PathManager();
   private readonly camera = new CameraManager(CAMERA_CONFIG);
+  private readonly viewZoom: ViewZoom;
   private readonly towers: Tower[] = [];
   private readonly enemies: Enemy[] = [];
   private readonly projectiles: Projectile[] = [];
@@ -111,6 +113,7 @@ export class Game {
     }
 
     this.ctx = ctx;
+    this.viewZoom = new ViewZoom(canvas);
     this.waveManager = this.createWaveManager();
     this.reportBalanceValidation();
     this.ui = new UIManager(
@@ -255,18 +258,39 @@ export class Game {
   }
 
   panCameraByScreenDelta(deltaX: number, deltaY: number): void {
-    if (!CAMERA_CONFIG.useCameraManager) return;
-    this.camera.panByScreenDelta(deltaX, deltaY);
+    if (CAMERA_CONFIG.useCameraManager) {
+      this.camera.panByScreenDelta(deltaX, deltaY);
+      return;
+    }
+    this.viewZoom.panByCanvasDelta(deltaX, deltaY);
   }
 
   zoomCameraAtScreenPoint(nextZoom: number, screenPoint: Vector2): void {
-    if (!CAMERA_CONFIG.useCameraManager || !CAMERA_CONFIG.allowPinchZoom) return;
-    this.camera.zoomAtScreenPoint(nextZoom, screenPoint);
+    if (CAMERA_CONFIG.useCameraManager) {
+      if (!CAMERA_CONFIG.allowPinchZoom) return;
+      this.camera.zoomAtScreenPoint(nextZoom, screenPoint);
+      return;
+    }
+    this.viewZoom.zoomAtCanvasPoint(nextZoom, screenPoint);
+  }
+
+  zoomViewBy(multiplier: number): void {
+    if (CAMERA_CONFIG.useCameraManager) {
+      this.camera.zoomAtScreenPoint(this.camera.zoom * multiplier, {
+        x: this.width / 2,
+        y: this.height / 2
+      });
+      return;
+    }
+    this.viewZoom.zoomBy(multiplier);
   }
 
   resetCamera(silent = false): void {
-    if (!CAMERA_CONFIG.useCameraManager) return;
-    this.camera.resetToDefault(this.pathManager.getBounds());
+    if (CAMERA_CONFIG.useCameraManager) {
+      this.camera.resetToDefault(this.pathManager.getBounds());
+    } else {
+      this.viewZoom.reset();
+    }
     if (!silent) {
       this.showFeedback("Camera reset");
       this.updateUi();
@@ -274,7 +298,12 @@ export class Game {
   }
 
   get cameraZoom(): number {
-    return CAMERA_CONFIG.useCameraManager ? this.camera.zoom : 1;
+    if (CAMERA_CONFIG.useCameraManager) return this.camera.zoom;
+    return this.viewZoom.getZoom();
+  }
+
+  isViewZoomActive(): boolean {
+    return !CAMERA_CONFIG.useCameraManager && this.viewZoom.isActive();
   }
 
   upgradeSelectedTower(): void {
@@ -591,10 +620,21 @@ export class Game {
     this.canvas.height = this.height;
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.camera.resize(this.width, this.height);
+    this.syncViewZoomEnabled();
     this.resetCamera(true);
     if (!CAMERA_CONFIG.useCameraManager) {
       this.buildPath();
     }
+  }
+
+  private syncViewZoomEnabled(): void {
+    if (CAMERA_CONFIG.useCameraManager) {
+      this.viewZoom.setEnabled(false);
+      return;
+    }
+    const layoutMode = document.documentElement.dataset.layoutMode ?? "";
+    const isMobileLayout = layoutMode === "mobilePortrait" || layoutMode === "mobileLandscape";
+    this.viewZoom.setEnabled(isMobileLayout);
   }
 
   private scheduleResize(): void {

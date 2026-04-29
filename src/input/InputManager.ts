@@ -21,6 +21,7 @@ export class InputManager {
     this.registerCanvasEvents();
     this.registerPaletteEvents();
     this.registerKeyboardEvents();
+    this.registerZoomControls();
   }
 
   private registerCanvasEvents(): void {
@@ -163,6 +164,35 @@ export class InputManager {
     }
   }
 
+  private registerZoomControls(): void {
+    const zoomIn = document.querySelector<HTMLButtonElement>("#zoom-in-button");
+    const zoomOut = document.querySelector<HTMLButtonElement>("#zoom-out-button");
+    const zoomReset = document.querySelector<HTMLButtonElement>("#zoom-reset-button");
+
+    const stop = (event: Event): void => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    zoomIn?.addEventListener("pointerdown", stop, { passive: false });
+    zoomIn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.game.zoomViewBy(1.25);
+    });
+
+    zoomOut?.addEventListener("pointerdown", stop, { passive: false });
+    zoomOut?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.game.zoomViewBy(1 / 1.25);
+    });
+
+    zoomReset?.addEventListener("pointerdown", stop, { passive: false });
+    zoomReset?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.game.resetCamera(true);
+    });
+  }
+
   private registerKeyboardEvents(): void {
     window.addEventListener("keydown", (event) => {
       if (event.key === " ") {
@@ -277,7 +307,7 @@ export class InputManager {
     const element = document.elementFromPoint(event.clientX, event.clientY);
     return Boolean(
       element?.closest(
-        "#tower-palette, #tower-inspector, #hud, #wave-info-panel, #wave-info-button, #message, #start-screen, #loading-screen, #debug-panel"
+        "#tower-palette, #tower-inspector, #hud, #wave-info-panel, #wave-info-button, #zoom-controls, #message, #start-screen, #loading-screen, #debug-panel"
       )
     );
   }
