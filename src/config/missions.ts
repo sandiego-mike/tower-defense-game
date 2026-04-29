@@ -113,58 +113,96 @@ export const MISSION_THEME_CONFIGS: Record<MissionThemeId, MissionThemeConfig> =
   }
 };
 
+// Path coordinate guide
+// ─────────────────────────────────────────────────────────────────────────────
+// All path points use normalized canvas coordinates: (0, 0) top-left, (1, 1)
+// bottom-right. Values slightly outside [0, 1] place entry/exit off-screen.
+//
+// Entry/exit convention:
+//   Start at { x: -0.04, y: <height> } — enters from the left edge.
+//   End at   { x:  1.04, y: <height> } — exits to the right edge.
+//
+// Segment style:
+//   Alternate horizontal (same y) and vertical (same x) segments.
+//   Each pair of consecutive points forms one straight segment.
+//
+// Tuning difficulty via parallel-segment spacing:
+//   ≥ 0.40 apart  → open map, easy tower placement (beginner-friendly)
+//   0.22–0.35     → moderate spacing (medium challenge)
+//   ≤ 0.22        → tight corridors, limited placement spots (hard)
+//
+// Backtracks (a segment going left after going right) create column chokepoints
+// where only a narrow strip of ground flanks both sides of the path — useful for
+// hard maps where tower positioning becomes a meaningful constraint.
+//
+// Tower placement is blocked within 42 px of the path center, which equals
+// roughly 0.027 of canvas width (1536 px) or 0.049 of canvas height (864 px).
+// ─────────────────────────────────────────────────────────────────────────────
 export const MISSION_CONFIGS: Record<MissionId, MissionConfig> = {
   "green-pass": {
     id: "green-pass",
     label: "Green Pass",
-    description: "A gentle starter route with two clean turns.",
+    description: "An open U-shaped route — wide gaps between segments give plenty of space to build.",
     // Assign a mission theme to choose enemy sprites. To add a new mission theme,
     // extend MissionThemeId in types.ts and MISSION_THEME_CONFIGS above, then set themeId.
     themeId: "forest",
     // Assign a map background by matching this key to ASSET_MANIFEST in config/assets.ts.
     // Place the file at public/assets/maps/forest-map.png.
     backgroundImageKey: "forest-map",
+    // Shape: symmetric U — enter and exit at the same height (y=0.26).
+    // Parallel horizontal segments are 0.48 apart, leaving a large open central
+    // area that beginners can easily fill with towers. 4 turns total.
     path: [
-      { x: -0.04, y: 0.28 },
-      { x: 0.24, y: 0.28 },
-      { x: 0.24, y: 0.7 },
-      { x: 0.58, y: 0.7 },
-      { x: 0.58, y: 0.4 },
-      { x: 1.04, y: 0.4 }
+      { x: -0.04, y: 0.26 }, // Enter left, upper third
+      { x: 0.30,  y: 0.26 }, // Right across upper section
+      { x: 0.30,  y: 0.74 }, // Down (0.48 gap — very open centre)
+      { x: 0.70,  y: 0.74 }, // Right across lower section
+      { x: 0.70,  y: 0.26 }, // Up to entry height (closes the U)
+      { x: 1.04,  y: 0.26 }  // Exit right, upper third
     ]
   },
   "desert-bend": {
     id: "desert-bend",
     label: "Desert Bend",
-    description: "A longer route that gives splash towers more time to shine.",
+    description: "A winding S-curve that covers the full map — six turns demand broad coverage.",
     themeId: "desert",
     backgroundImageKey: "desert-map",
+    // Shape: extended S-curve — enters lower-left, climbs to the top, sweeps
+    // back down to the bottom, then rises again to exit mid-right.
+    // Parallel segments are 0.40–0.56 apart: enough room for towers but more
+    // ground to cover than Forest. 6 turns, longer total path distance.
     path: [
-      { x: -0.04, y: 0.62 },
-      { x: 0.18, y: 0.62 },
-      { x: 0.18, y: 0.24 },
-      { x: 0.48, y: 0.24 },
-      { x: 0.48, y: 0.78 },
-      { x: 0.78, y: 0.78 },
-      { x: 0.78, y: 0.36 },
-      { x: 1.04, y: 0.36 }
+      { x: -0.04, y: 0.70 }, // Enter left, lower third
+      { x: 0.20,  y: 0.70 }, // Short right along bottom
+      { x: 0.20,  y: 0.22 }, // Up (0.48 rise — first big sweep)
+      { x: 0.50,  y: 0.22 }, // Right across the top
+      { x: 0.50,  y: 0.78 }, // Down (0.56 drop — second big sweep)
+      { x: 0.80,  y: 0.78 }, // Right along the bottom
+      { x: 0.80,  y: 0.40 }, // Up (0.38 rise — exit sweep)
+      { x: 1.04,  y: 0.40 }  // Exit right, middle height
     ]
   },
   "lava-spill": {
     id: "lava-spill",
     label: "Lava Spill",
-    description: "A compact zig-zag path with tight tower placement choices.",
+    description: "A descending staircase with tight parallel bands — limited placement space and backtracks make every tower count.",
     themeId: "lava",
     backgroundImageKey: "lava-map",
+    // Shape: staircase descent with backtracks — enters upper-left, zigzags
+    // down to lower-right in three tight horizontal bands.
+    // Parallel segments are only 0.20 apart (≈173 px on a 864 px canvas),
+    // leaving just 1–2 tower widths between them. Backtracks at x=0.48→0.12
+    // create a narrow left-side corridor that forces difficult positioning.
+    // 6 turns total; the path ends near the bottom-right corner.
     path: [
-      { x: -0.04, y: 0.2 },
-      { x: 0.34, y: 0.2 },
-      { x: 0.34, y: 0.43 },
-      { x: 0.12, y: 0.43 },
-      { x: 0.12, y: 0.72 },
-      { x: 0.66, y: 0.72 },
-      { x: 0.66, y: 0.48 },
-      { x: 1.04, y: 0.48 }
+      { x: -0.04, y: 0.18 }, // Enter left, near top
+      { x: 0.48,  y: 0.18 }, // Right across upper band (long exposure)
+      { x: 0.48,  y: 0.38 }, // Down (0.20 gap — tight)
+      { x: 0.12,  y: 0.38 }, // Left backtrack (creates left-side chokepoint)
+      { x: 0.12,  y: 0.58 }, // Down (0.20 gap — tight)
+      { x: 0.64,  y: 0.58 }, // Right across middle band
+      { x: 0.64,  y: 0.78 }, // Down (0.20 gap — tight)
+      { x: 1.04,  y: 0.78 }  // Exit right, near bottom
     ]
   }
 };
