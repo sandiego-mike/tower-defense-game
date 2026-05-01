@@ -15,7 +15,7 @@ export const ENEMY_CONFIGS: Record<EnemyType, EnemyConfig> = {
     radius: 13,
     // Baseline enemy used to teach core targeting and economy pacing.
     health: 45,
-    speed: 72,
+    speed: 40,
     lifeDamage: 5,
     reward: 5,
     minPathSpacing: 34
@@ -30,7 +30,7 @@ export const ENEMY_CONFIGS: Record<EnemyType, EnemyConfig> = {
     radius: 11,
     // Fragile but quick; introduced early to test coverage and targeting.
     health: 28,
-    speed: 112,
+    speed: 70,
     lifeDamage: 5,
     reward: 7,
     minPathSpacing: 28
@@ -44,10 +44,10 @@ export const ENEMY_CONFIGS: Record<EnemyType, EnemyConfig> = {
     spriteForwardAngle: Math.PI / 2,
     radius: 17,
     // Slow high-health unit that rewards upgraded single-target damage.
-    health: 105,
-    speed: 50,
+    health: 110,
+    speed: 25,
     lifeDamage: 8,
-    reward: 14,
+    reward: 20,
     minPathSpacing: 50
   },
   swarm: {
@@ -60,9 +60,9 @@ export const ENEMY_CONFIGS: Record<EnemyType, EnemyConfig> = {
     radius: 9,
     // Cheap mass unit that gives splash towers a clear purpose.
     health: 18,
-    speed: 104,
+    speed: 80,
     lifeDamage: 3,
-    reward: 3,
+    reward: 4,
     minPathSpacing: 20
   },
   boss: {
@@ -74,10 +74,10 @@ export const ENEMY_CONFIGS: Record<EnemyType, EnemyConfig> = {
     spriteForwardAngle: Math.PI / 2,
     radius: 25,
     // Final-wave anchor. The escort should matter, but this is the distinct threat.
-    health: 360,
-    speed: 42,
+    health: 420,
+    speed: 30,
     lifeDamage: 20,
-    reward: 60,
+    reward: 100,
     minPathSpacing: 104
   }
 };

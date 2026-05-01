@@ -11,7 +11,7 @@ export const DIFFICULTY_CONFIGS: Record<DifficultyId, DifficultyConfig> = {
     enemyRewardMultiplier: 1.18,
     spawnIntervalMultiplier: 1.15,
     startingLife: 120,
-    startingGold: 360,
+    startingGold: 400,
     scoreMultiplier: 0.85
   },
   normal: {
@@ -24,7 +24,7 @@ export const DIFFICULTY_CONFIGS: Record<DifficultyId, DifficultyConfig> = {
     enemyRewardMultiplier: 1,
     spawnIntervalMultiplier: 1,
     startingLife: 100,
-    startingGold: 300,
+    startingGold: 320,
     scoreMultiplier: 1
   },
   hard: {
@@ -37,7 +37,7 @@ export const DIFFICULTY_CONFIGS: Record<DifficultyId, DifficultyConfig> = {
     enemyRewardMultiplier: 0.88,
     spawnIntervalMultiplier: 0.82,
     startingLife: 80,
-    startingGold: 240,
+    startingGold: 280,
     scoreMultiplier: 1.25
   }
 };
