@@ -5,7 +5,7 @@ import { DIFFICULTY_CONFIGS } from "../config/difficulties";
 import { ENEMY_CONFIGS } from "../config/enemies";
 import { ECONOMY_CONFIG, SCORE_CONFIG } from "../config/economy";
 import { CAMERA_CONFIG, GENERIC_ENEMY_SPRITE_KEYS, MISSION_CONFIGS, MISSION_ORDER, MISSION_THEME_CONFIGS } from "../config/missions";
-import { getPathStyleForTheme, PROTOTYPE_FOREST_THEME } from "../config/theme";
+import { getPathStyleForTheme, PathVisualStyle, PROTOTYPE_FOREST_THEME } from "../config/theme";
 import { TOWER_CONFIGS } from "../config/towers";
 import { DEFAULT_WAVE_CONFIG } from "../config/waves";
 import { InputManager } from "../input/InputManager";
@@ -613,6 +613,10 @@ export class Game {
       this.ctx.restore();
     }
 
+    if (pathStyle.segmentColor) {
+      this.drawPathSegmentDetails(pathStyle);
+    }
+
     const start = this.path[0];
     const end = this.path[this.path.length - 1];
     this.ctx.fillStyle = PROTOTYPE_FOREST_THEME.startColor;
@@ -652,6 +656,43 @@ export class Game {
       this.ctx.lineTo(this.path[index].x, this.path[index].y);
     }
     this.ctx.stroke();
+  }
+
+  private drawPathSegmentDetails(pathStyle: PathVisualStyle): void {
+    const spacing = pathStyle.segmentSpacing ?? 34;
+    const segmentLength = pathStyle.segmentLength ?? 22;
+    if (spacing <= 0 || segmentLength <= 0) return;
+
+    this.ctx.save();
+    this.ctx.globalAlpha = pathStyle.segmentAlpha ?? 0.2;
+    this.ctx.lineWidth = pathStyle.segmentWidth ?? 2;
+    this.ctx.strokeStyle = pathStyle.segmentColor ?? pathStyle.outerColor;
+    this.ctx.lineCap = "round";
+
+    for (let index = 1; index < this.path.length; index += 1) {
+      const start = this.path[index - 1];
+      const end = this.path[index];
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const length = Math.hypot(dx, dy);
+      if (length <= spacing) continue;
+
+      const directionX = dx / length;
+      const directionY = dy / length;
+      const normalX = -directionY;
+      const normalY = directionX;
+
+      for (let distanceAlong = spacing; distanceAlong < length - spacing * 0.45; distanceAlong += spacing) {
+        const x = start.x + directionX * distanceAlong;
+        const y = start.y + directionY * distanceAlong;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x - normalX * segmentLength * 0.5, y - normalY * segmentLength * 0.5);
+        this.ctx.lineTo(x + normalX * segmentLength * 0.5, y + normalY * segmentLength * 0.5);
+        this.ctx.stroke();
+      }
+    }
+
+    this.ctx.restore();
   }
 
   private resize(): void {

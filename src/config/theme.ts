@@ -22,6 +22,11 @@ export type PathVisualStyle = {
   accentWidth?: number;
   accentAlpha?: number;
   accentDash?: number[];
+  segmentColor?: string;
+  segmentWidth?: number;
+  segmentAlpha?: number;
+  segmentSpacing?: number;
+  segmentLength?: number;
 };
 
 export const DEFAULT_PATH_STYLE: PathVisualStyle = {
@@ -31,11 +36,20 @@ export const DEFAULT_PATH_STYLE: PathVisualStyle = {
 
 export const PATH_STYLES_BY_THEME: Partial<Record<MissionThemeId, PathVisualStyle>> = {
   forest: {
-    outerColor: "#345c35",
-    innerColor: "#6f8f4a",
-    highlightColor: "#a5c96c",
-    highlightWidth: 5,
-    highlightAlpha: 0.2
+    outerColor: "#6c5a30",
+    innerColor: "#c99a5a",
+    highlightColor: "#e6bd72",
+    highlightWidth: 7,
+    highlightAlpha: 0.28,
+    accentColor: "#f0d18b",
+    accentWidth: 2,
+    accentAlpha: 0.18,
+    accentDash: [16, 30],
+    segmentColor: "#7d5a33",
+    segmentWidth: 2,
+    segmentAlpha: 0.2,
+    segmentSpacing: 34,
+    segmentLength: 23
   },
   desert: {
     outerColor: "#745436",
