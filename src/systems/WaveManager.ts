@@ -158,6 +158,7 @@ export class WaveManager {
     return this.waveConfig.waves.map((waveDefinition, waveIndex) => {
       const waveHealthScale = waveDefinition.healthScale * (1 + waveIndex * this.waveConfig.healthGrowthPerWave);
       const waveCountScale = waveDefinition.countScale * (1 + waveIndex * this.waveConfig.countGrowthPerWave);
+      const initialSpawnDelay = waveIndex === 0 ? (this.waveConfig.firstWaveInitialSpawnDelay ?? this.waveConfig.initialSpawnDelay) : this.waveConfig.initialSpawnDelay;
       const spawnQueue = waveDefinition.groups.flatMap((group, groupIndex) => {
         const enemyConfig = this.enemyConfigs[group.enemyType];
         const count = Math.max(1, Math.round(group.count * waveCountScale * this.difficultyConfig.enemyCountMultiplier));
@@ -176,7 +177,7 @@ export class WaveManager {
           enemySpeed: Math.round(enemyConfig.speed * speedMultiplier * this.difficultyConfig.enemySpeedMultiplier),
           enemyReward: Math.max(1, Math.round(enemyConfig.reward * this.difficultyConfig.enemyRewardMultiplier)),
           minPathSpacing,
-          scheduledTime: this.waveConfig.initialSpawnDelay + startDelay + spawnIndex * groupSpawnInterval,
+          scheduledTime: initialSpawnDelay + startDelay + spawnIndex * groupSpawnInterval,
           groupIndex
         }));
       });

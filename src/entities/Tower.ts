@@ -1,5 +1,6 @@
 import { Enemy } from "./Enemy";
 import { Projectile } from "./Projectile";
+import { getTowerSpriteKeyCandidates } from "../config/towerSprites";
 import { TOWER_CONFIGS } from "../config/towers";
 import { AssetManager } from "../systems/AssetManager";
 import { TargetingMode, TowerLevelStats, TowerType, Vector2, distanceSquared } from "../types";
@@ -20,6 +21,7 @@ export class Tower {
   private targetReacquireTimer = 0;
   private cachedRange = 0;
   private cachedRangeSquared = 0;
+  private upgradeFeedbackTimer = 0;
 
   constructor(
     readonly position: Vector2,
@@ -39,6 +41,7 @@ export class Tower {
     const config = TOWER_CONFIGS[this.type];
     this.cooldown = Math.max(0, this.cooldown - deltaTime);
     this.targetReacquireTimer = Math.max(0, this.targetReacquireTimer - deltaTime);
+    this.upgradeFeedbackTimer = Math.max(0, this.upgradeFeedbackTimer - deltaTime);
 
     if (this.cooldown > 0) return false;
 
@@ -72,6 +75,7 @@ export class Tower {
     this.level += 1;
     this.currentTarget = undefined;
     this.cachedRange = 0;
+    this.upgradeFeedbackTimer = 0.24;
     return true;
   }
 
@@ -108,10 +112,13 @@ export class Tower {
       ctx.stroke();
     }
 
-    const sprite = assets.getImage(config.spriteKey);
+    const sprite = assets.getFirstAvailableImage(getTowerSpriteKeyCandidates(this.type, this.level, config.spriteKey));
     const drawSize = config.renderSize ?? this.size + 8;
+    const popProgress = this.getUpgradeFeedbackProgress();
+    const popScale = 1 + Math.sin(popProgress * Math.PI) * 0.1;
     ctx.save();
     ctx.translate(this.position.x, this.position.y);
+    ctx.scale(popScale, popScale);
     if (sprite) {
       ctx.drawImage(sprite, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
       this.drawSpriteTurretOverlay(ctx, sprite, drawSize);
@@ -120,12 +127,38 @@ export class Tower {
     }
     ctx.restore();
 
+    this.drawUpgradeFeedback(ctx, config.color, drawSize);
+
     const healthPercent = this.health / this.maxHealth;
     ctx.fillStyle = "#1f2937";
     ctx.fillRect(this.position.x - 18, this.position.y + 20, 36, 5);
     ctx.fillStyle = "#38bdf8";
     ctx.fillRect(this.position.x - 18, this.position.y + 20, 36 * healthPercent, 5);
 
+    ctx.restore();
+  }
+
+  private getUpgradeFeedbackProgress(): number {
+    if (this.upgradeFeedbackTimer <= 0) return 0;
+    return 1 - this.upgradeFeedbackTimer / 0.24;
+  }
+
+  private drawUpgradeFeedback(ctx: CanvasRenderingContext2D, color: string, drawSize: number): void {
+    if (this.upgradeFeedbackTimer <= 0) return;
+
+    const progress = this.getUpgradeFeedbackProgress();
+    const alpha = Math.max(0, 1 - progress);
+    const radius = drawSize * (0.38 + progress * 0.26);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(this.position.x, this.position.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
   }
 

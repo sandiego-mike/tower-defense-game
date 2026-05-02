@@ -11,9 +11,9 @@ export type EnemyType = "basic" | "fast" | "tank" | "swarm" | "boss";
 
 export type DifficultyId = "easy" | "normal" | "hard";
 
-export type MissionId = "green-pass" | "desert-bend" | "lava-spill";
+export type MissionId = "green-pass" | "desert-bend" | "lava-spill" | "ice-tundra";
 
-export type MissionThemeId = "forest" | "desert" | "lava";
+export type MissionThemeId = "forest" | "desert" | "lava" | "ice";
 
 export type GameState = "menu" | "playing" | "paused" | "won" | "lost";
 
@@ -181,6 +181,7 @@ export type WaveDefinition = {
 
 export type WaveConfig = {
   initialSpawnDelay: number;
+  firstWaveInitialSpawnDelay?: number;
   betweenWaveDelay: number;
   minSpawnInterval: number;
   healthGrowthPerWave: number;

@@ -1,4 +1,5 @@
 import { AssetDefinition } from "../types";
+import { TOWER_UPGRADE_ASSETS } from "./towerSprites";
 
 // Paths point to files in /public. Vite serves public assets from the site root.
 // Enemy PNGs are organized by theme under public/assets/enemies/<theme>/.
@@ -9,6 +10,7 @@ export const ASSET_MANIFEST: AssetDefinition[] = [
   { key: "basic-tower", src: "/assets/towers/basic-tower.png" },
   { key: "splash-tower", src: "/assets/towers/splash-tower.png" },
   { key: "slow-tower", src: "/assets/towers/slow-tower.png" },
+  ...TOWER_UPGRADE_ASSETS,
   // Generic enemy sprite keys currently reuse forest art as the fallback set.
   { key: "basic-enemy", src: "/assets/enemies/forest/forest-basic-enemy.png", removeBackground: true },
   { key: "fast-enemy", src: "/assets/enemies/forest/forest-fast-enemy.png", removeBackground: true },
@@ -30,7 +32,13 @@ export const ASSET_MANIFEST: AssetDefinition[] = [
   { key: "lava-tank-enemy", src: "/assets/enemies/lava/lava-tank-enemy.png", removeBackground: true },
   { key: "lava-swarm-enemy", src: "/assets/enemies/lava/lava-swarm-enemy.png", removeBackground: true },
   { key: "lava-boss-enemy", src: "/assets/enemies/lava/lava-boss-enemy.png", removeBackground: true },
+  { key: "ice-basic-enemy", src: "/assets/enemies/ice/ice-basic-enemy.png", removeBackground: true },
+  { key: "ice-fast-enemy", src: "/assets/enemies/ice/ice-fast-enemy.png", removeBackground: true },
+  { key: "ice-tank-enemy", src: "/assets/enemies/ice/ice-tank-enemy.png", removeBackground: true },
+  { key: "ice-swarm-enemy", src: "/assets/enemies/ice/ice-swarm-enemy.png", removeBackground: true },
+  { key: "ice-boss-enemy", src: "/assets/enemies/ice/ice-boss-enemy.png", removeBackground: true },
   { key: "forest-map", src: "/assets/maps/forest-map.png" },
   { key: "desert-map", src: "/assets/maps/desert-map.png" },
-  { key: "lava-map", src: "/assets/maps/lava-map.png" }
+  { key: "lava-map", src: "/assets/maps/lava-map.png" },
+  { key: "ice-map", src: "/assets/maps/ice-map.png" }
 ];

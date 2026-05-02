@@ -81,7 +81,7 @@ select {
   left: var(--hud-side, 12px);
   right: var(--hud-side, 12px);
   display: grid;
-  grid-template-columns: auto auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   justify-content: space-between;
   gap: var(--hud-gap, 8px);
   align-items: center;
@@ -106,6 +106,7 @@ select {
 }
 
 .hud-actions {
+  grid-column: 3;
   justify-self: end;
   pointer-events: auto;
   transform: scale(var(--controls-scale, 1));

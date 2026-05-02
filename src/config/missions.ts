@@ -1,6 +1,6 @@
 import { CameraConfig, MissionConfig, MissionId, MissionThemeConfig, MissionThemeId } from "../types";
 
-export const MISSION_ORDER: MissionId[] = ["green-pass", "desert-bend", "lava-spill"];
+export const MISSION_ORDER: MissionId[] = ["green-pass", "desert-bend", "lava-spill", "ice-tundra"];
 
 export const GENERIC_ENEMY_SPRITE_KEYS = {
   basic: "basic-enemy",
@@ -110,6 +110,23 @@ export const MISSION_THEME_CONFIGS: Record<MissionThemeId, MissionThemeConfig> =
       shadowEnabled: true,
       shadowOpacity: 0.26
     }
+  },
+  ice: {
+    id: "ice",
+    label: "Ice",
+    enemySpriteKeys: {
+      basic: "ice-basic-enemy",
+      fast: "ice-fast-enemy",
+      tank: "ice-tank-enemy",
+      swarm: "ice-swarm-enemy",
+      boss: "ice-boss-enemy"
+    },
+    bossVisual: {
+      anchorX: 0.5,
+      anchorY: 0.86,
+      shadowEnabled: true,
+      shadowOpacity: 0.24
+    }
   }
 };
 
@@ -203,6 +220,27 @@ export const MISSION_CONFIGS: Record<MissionId, MissionConfig> = {
       { x: 0.64,  y: 0.58 }, // Right across middle band
       { x: 0.64,  y: 0.78 }, // Down (0.20 gap — tight)
       { x: 1.04,  y: 0.78 }  // Exit right, near bottom
+    ]
+  },
+  "ice-tundra": {
+    id: "ice-tundra",
+    label: "Ice Tundra",
+    description: "A frozen switchback route with icy chokepoints — long sightlines reward careful tower placement.",
+    themeId: "ice",
+    backgroundImageKey: "ice-map",
+    // Shape: frozen switchback — tighter than Forest and Desert, but with
+    // wider bands than Lava so careful long-range coverage still has room.
+    path: [
+      { x: -0.04, y: 0.32 },
+      { x: 0.22,  y: 0.32 },
+      { x: 0.22,  y: 0.16 },
+      { x: 0.58,  y: 0.16 },
+      { x: 0.58,  y: 0.50 },
+      { x: 0.34,  y: 0.50 },
+      { x: 0.34,  y: 0.76 },
+      { x: 0.78,  y: 0.76 },
+      { x: 0.78,  y: 0.36 },
+      { x: 1.04,  y: 0.36 }
     ]
   }
 };

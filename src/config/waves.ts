@@ -2,6 +2,7 @@ import { WaveConfig } from "../types";
 
 export const DEFAULT_WAVE_CONFIG: WaveConfig = {
   initialSpawnDelay: 1.2,
+  firstWaveInitialSpawnDelay: 10,
   betweenWaveDelay: 2,
   minSpawnInterval: 0.42,
   // Global growth keeps later waves rising even when individual wave definitions stay readable.

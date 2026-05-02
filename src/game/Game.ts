@@ -5,7 +5,7 @@ import { DIFFICULTY_CONFIGS } from "../config/difficulties";
 import { ENEMY_CONFIGS } from "../config/enemies";
 import { ECONOMY_CONFIG, SCORE_CONFIG } from "../config/economy";
 import { CAMERA_CONFIG, GENERIC_ENEMY_SPRITE_KEYS, MISSION_CONFIGS, MISSION_THEME_CONFIGS } from "../config/missions";
-import { PROTOTYPE_FOREST_THEME } from "../config/theme";
+import { getPathStyleForTheme, PROTOTYPE_FOREST_THEME } from "../config/theme";
 import { TOWER_CONFIGS } from "../config/towers";
 import { DEFAULT_WAVE_CONFIG } from "../config/waves";
 import { InputManager } from "../input/InputManager";
@@ -566,16 +566,38 @@ export class Game {
   }
 
   private drawPath(): void {
+    const mission = MISSION_CONFIGS[this.missionId];
+    const pathStyle = getPathStyleForTheme(mission.themeId);
+
     this.ctx.save();
     this.ctx.lineCap = "round";
     this.ctx.lineJoin = "round";
     this.ctx.lineWidth = 46;
-    this.ctx.strokeStyle = PROTOTYPE_FOREST_THEME.pathOuterColor;
+    this.ctx.strokeStyle = pathStyle.outerColor;
     this.strokePath();
 
     this.ctx.lineWidth = 32;
-    this.ctx.strokeStyle = PROTOTYPE_FOREST_THEME.pathInnerColor;
+    this.ctx.strokeStyle = pathStyle.innerColor;
     this.strokePath();
+
+    if (pathStyle.highlightColor) {
+      this.ctx.save();
+      this.ctx.globalAlpha = pathStyle.highlightAlpha ?? 0.24;
+      this.ctx.lineWidth = pathStyle.highlightWidth ?? 5;
+      this.ctx.strokeStyle = pathStyle.highlightColor;
+      this.strokePath();
+      this.ctx.restore();
+    }
+
+    if (pathStyle.accentColor) {
+      this.ctx.save();
+      this.ctx.globalAlpha = pathStyle.accentAlpha ?? 0.22;
+      this.ctx.lineWidth = pathStyle.accentWidth ?? 3;
+      this.ctx.strokeStyle = pathStyle.accentColor;
+      this.ctx.setLineDash(pathStyle.accentDash ?? [14, 26]);
+      this.strokePath();
+      this.ctx.restore();
+    }
 
     const start = this.path[0];
     const end = this.path[this.path.length - 1];
@@ -1078,7 +1100,8 @@ export class Game {
     const map: Record<string, AmbientKey> = {
       forest: "forest-ambient",
       desert: "desert-ambient",
-      lava: "lava-ambient"
+      lava: "lava-ambient",
+      ice: "ice-ambient"
     };
     return map[themeId] ?? "forest-ambient";
   }
