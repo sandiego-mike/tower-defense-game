@@ -129,12 +129,6 @@ export class Tower {
 
     this.drawUpgradeFeedback(ctx, config.color, drawSize);
 
-    const healthPercent = this.health / this.maxHealth;
-    ctx.fillStyle = "#1f2937";
-    ctx.fillRect(this.position.x - 18, this.position.y + 20, 36, 5);
-    ctx.fillStyle = "#38bdf8";
-    ctx.fillRect(this.position.x - 18, this.position.y + 20, 36 * healthPercent, 5);
-
     ctx.restore();
   }
 
