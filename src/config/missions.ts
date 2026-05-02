@@ -1,6 +1,6 @@
 import { CameraConfig, MissionConfig, MissionId, MissionThemeConfig, MissionThemeId } from "../types";
 
-export const MISSION_ORDER: MissionId[] = ["green-pass", "desert-bend", "lava-spill", "ice-tundra"];
+export const MISSION_ORDER: MissionId[] = ["green-pass", "desert-bend", "lava-spill", "ice-tundra", "island-cove"];
 
 export const GENERIC_ENEMY_SPRITE_KEYS = {
   basic: "basic-enemy",
@@ -127,6 +127,23 @@ export const MISSION_THEME_CONFIGS: Record<MissionThemeId, MissionThemeConfig> =
       shadowEnabled: true,
       shadowOpacity: 0.24
     }
+  },
+  island: {
+    id: "island",
+    label: "Island",
+    enemySpriteKeys: {
+      basic: "island-basic-enemy",
+      fast: "island-fast-enemy",
+      tank: "island-tank-enemy",
+      swarm: "island-swarm-enemy",
+      boss: "island-boss-enemy"
+    },
+    bossVisual: {
+      anchorX: 0.5,
+      anchorY: 0.86,
+      shadowEnabled: true,
+      shadowOpacity: 0.23
+    }
   }
 };
 
@@ -241,6 +258,27 @@ export const MISSION_CONFIGS: Record<MissionId, MissionConfig> = {
       { x: 0.78,  y: 0.76 },
       { x: 0.78,  y: 0.36 },
       { x: 1.04,  y: 0.36 }
+    ]
+  },
+  "island-cove": {
+    id: "island-cove",
+    label: "Island Cove",
+    description: "A tropical island route with wide beach bends and palm-lined chokepoints — balanced placement rewards smart coverage.",
+    themeId: "island",
+    backgroundImageKey: "island-map",
+    // Shape: beach switchback — a medium route with broad turns and several
+    // useful coverage lanes, less compressed than Ice or Lava.
+    path: [
+      { x: -0.04, y: 0.62 },
+      { x: 0.18,  y: 0.62 },
+      { x: 0.18,  y: 0.28 },
+      { x: 0.42,  y: 0.28 },
+      { x: 0.42,  y: 0.72 },
+      { x: 0.68,  y: 0.72 },
+      { x: 0.68,  y: 0.38 },
+      { x: 0.86,  y: 0.38 },
+      { x: 0.86,  y: 0.58 },
+      { x: 1.04,  y: 0.58 }
     ]
   }
 };

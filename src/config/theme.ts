@@ -69,6 +69,17 @@ export const PATH_STYLES_BY_THEME: Partial<Record<MissionThemeId, PathVisualStyl
     accentWidth: 3,
     accentAlpha: 0.24,
     accentDash: [26, 24]
+  },
+  island: {
+    outerColor: "#9b6a35",
+    innerColor: "#d9b46f",
+    highlightColor: "#f1d99a",
+    highlightWidth: 5,
+    highlightAlpha: 0.28,
+    accentColor: "#fff2bd",
+    accentWidth: 3,
+    accentAlpha: 0.22,
+    accentDash: [3, 18]
   }
 };
 

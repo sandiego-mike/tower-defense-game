@@ -1,6 +1,6 @@
 import { DIFFICULTY_CONFIGS } from "../config/difficulties";
 import { ENEMY_CONFIGS } from "../config/enemies";
-import { MISSION_CONFIGS, MISSION_THEME_CONFIGS } from "../config/missions";
+import { MISSION_CONFIGS, MISSION_ORDER, MISSION_THEME_CONFIGS } from "../config/missions";
 import { TOWER_CONFIGS } from "../config/towers";
 import {
   DebugBalanceInfo,
@@ -50,6 +50,8 @@ class UIControlRegistry {
   registerButton(element: HTMLButtonElement | null, id: string, label: string, onClick: () => void): void {
     if (!element) return;
     const overlay = this.createOverlay(id);
+    let activePointerId: number | null = null;
+    let suppressClickUntil = 0;
     const model: UIButtonModel = {
       id,
       label,
@@ -64,7 +66,9 @@ class UIControlRegistry {
 
     element.addEventListener("click", (event) => {
       event.stopPropagation();
+      event.preventDefault();
       if (!model.visible || !model.enabled) return;
+      if (performance.now() < suppressClickUntil) return;
       model.onClick?.();
     });
     element.addEventListener("pointerenter", () => {
@@ -73,14 +77,22 @@ class UIControlRegistry {
     element.addEventListener("pointerleave", () => {
       element.classList.remove("is-hovered", "is-pressed");
     });
-    element.addEventListener("pointerdown", () => {
-      if (model.enabled) element.classList.add("is-pressed");
+    element.addEventListener("pointerdown", (event) => {
+      if (!model.enabled || !model.visible) return;
+      activePointerId = event.pointerId;
+      element.classList.add("is-pressed");
     });
-    element.addEventListener("pointerup", () => {
+    element.addEventListener("pointerup", (event) => {
       element.classList.remove("is-pressed");
+      if (!model.enabled || !model.visible) return;
+      if (activePointerId !== event.pointerId) return;
+      activePointerId = null;
+      suppressClickUntil = performance.now() + 40;
+      model.onClick?.();
     });
     element.addEventListener("pointercancel", () => {
       element.classList.remove("is-pressed");
+      activePointerId = null;
     });
 
     this.buttons.set(id, { model, element, overlay });
@@ -255,13 +267,12 @@ export class UIManager {
   private readonly messageTitle = document.querySelector<HTMLElement>("#message-title");
   private readonly messageBody = document.querySelector<HTMLElement>("#message-body");
   private readonly messageResumeButton = document.querySelector<HTMLButtonElement>("#message-resume-button");
+  private readonly messageContinueButton = document.querySelector<HTMLButtonElement>("#message-continue-button");
   private readonly messageRestartButton = document.querySelector<HTMLButtonElement>("#message-restart-button");
   private readonly messageMenuButton = document.querySelector<HTMLButtonElement>("#message-menu-button");
   private readonly messageResetCameraButton = document.querySelector<HTMLButtonElement>("#message-reset-camera-button");
   private readonly messageSkipWaveButton = document.querySelector<HTMLButtonElement>("#message-skip-wave-button");
-  private readonly messageDebugButton = document.querySelector<HTMLButtonElement>("#message-debug-button");
   private readonly towerButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".tower-button"));
-  private readonly showDebugControls = (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV ?? false;
   private readonly hitboxOverlayRoot = this.createHitboxOverlayRoot();
   private readonly controlRegistry = new UIControlRegistry(this.hitboxOverlayRoot);
   private missionInfos: MissionSelectInfo[] = [];
@@ -281,6 +292,7 @@ export class UIManager {
     onResume: () => void,
     onRestart: () => void,
     onReturnToMenu: () => void,
+    onContinueVictory: () => void,
     onToggleDebug: () => void,
     onSkipWave: () => void,
     onSetGameSpeed: (speed: number) => void,
@@ -304,6 +316,7 @@ export class UIManager {
       onResume,
       onRestart,
       onReturnToMenu,
+      onContinueVictory,
       onToggleDebug,
       onSkipWave,
       onCancelPlacement,
@@ -397,7 +410,7 @@ export class UIManager {
 
     if (!this.message) return;
     this.message.classList.toggle("hidden", state === "playing" || state === "menu");
-    this.renderMessage(state, runResult, debugBalanceInfo);
+    this.renderMessage(state, missionId, runResult, debugBalanceInfo);
     // Message buttons change visibility inside renderMessage(). Sync after that
     // so the reusable UI button hitboxes match the visible pause menu controls.
     this.controlRegistry.syncAll();
@@ -664,7 +677,7 @@ export class UIManager {
     return mode.charAt(0).toUpperCase() + mode.slice(1);
   }
 
-  private renderMessage(state: GameState, runResult: RunResult | null, debugBalanceInfo: DebugBalanceInfo): void {
+  private renderMessage(state: GameState, missionId: MissionId, runResult: RunResult | null, debugBalanceInfo: DebugBalanceInfo): void {
     if (!this.messageTitle || !this.messageBody) return;
 
     if (state === "paused") {
@@ -683,15 +696,22 @@ export class UIManager {
       this.messageBody.textContent = "";
     }
 
+    const hasNextMission = MISSION_ORDER.indexOf(missionId) < MISSION_ORDER.length - 1;
+    const shouldShowContinue = state === "won" && hasNextMission;
     this.messageResumeButton?.classList.toggle("hidden", state !== "paused");
+    this.messageContinueButton?.classList.toggle("hidden", !shouldShowContinue);
+    if (this.messageContinueButton) {
+      this.messageContinueButton.textContent = "Next Mission";
+      this.controlRegistry.setButtonState("victory-continue", {
+        label: this.messageContinueButton.textContent,
+        visible: shouldShowContinue,
+        enabled: true
+      });
+    }
     this.messageRestartButton?.classList.toggle("hidden", state === "menu");
     this.messageMenuButton?.classList.toggle("hidden", state === "menu");
     this.messageResetCameraButton?.classList.toggle("hidden", state === "menu");
     this.messageSkipWaveButton?.classList.toggle("hidden", !debugBalanceInfo.enabled || state !== "paused");
-    this.messageDebugButton?.classList.toggle("hidden", !this.showDebugControls || state !== "paused");
-    if (this.messageDebugButton) {
-      this.messageDebugButton.textContent = debugBalanceInfo.enabled ? "Debug On" : "Debug";
-    }
   }
 
   private renderDebugPanel(debugBalanceInfo: DebugBalanceInfo, state: GameState): void {
@@ -736,14 +756,17 @@ export class UIManager {
     const infos =
       this.missionInfos.length > 0
         ? this.missionInfos
-        : Object.values(MISSION_CONFIGS).map((mission) => ({
-            id: mission.id,
-            label: mission.label,
-            locked: !this.isMissionUnlocked(mission.id),
-            completed: false,
-            bestScore: 0,
-            bestStars: 0
-          }));
+        : MISSION_ORDER.map((missionId) => {
+            const mission = MISSION_CONFIGS[missionId];
+            return {
+              id: mission.id,
+              label: mission.label,
+              locked: !this.isMissionUnlocked(mission.id),
+              completed: false,
+              bestScore: 0,
+              bestStars: 0
+            };
+          });
 
     this.missionSelect.innerHTML = infos
       .map((info) => {
@@ -767,6 +790,7 @@ export class UIManager {
     onResume: () => void,
     onRestart: () => void,
     onReturnToMenu: () => void,
+    onContinueVictory: () => void,
     onToggleDebug: () => void,
     onSkipWave: () => void,
     onCancelPlacement: () => void,
@@ -815,11 +839,11 @@ export class UIManager {
     this.controlRegistry.registerButton(this.sellButton, "sell", "Sell", onSellTower);
     this.controlRegistry.registerElement(this.targetingSelect, "targeting", "Targeting");
     this.controlRegistry.registerButton(this.messageResumeButton, "resume", "Resume", onResume);
+    this.controlRegistry.registerButton(this.messageContinueButton, "victory-continue", "Next Mission", onContinueVictory);
     this.controlRegistry.registerButton(this.messageRestartButton, "restart", "Restart", onRestart);
     this.controlRegistry.registerButton(this.messageMenuButton, "mission-menu", "Mission Select", onReturnToMenu);
     this.controlRegistry.registerButton(this.messageResetCameraButton, "reset-camera", "Reset Camera", onResetCamera);
     this.controlRegistry.registerButton(this.messageSkipWaveButton, "skip-wave", "Skip Wave", onSkipWave);
-    this.controlRegistry.registerButton(this.messageDebugButton, "toggle-debug", "Debug", onToggleDebug);
     this.controlRegistry.registerButton(this.debugHealthBarsButton, "debug-health-bars", "Health Bars", onToggleHealthBars);
     this.controlRegistry.registerButton(this.debugEffectsButton, "debug-effects", "Effects", onToggleEffects);
     this.controlRegistry.registerButton(this.debugHitboxesButton, "debug-hitboxes", "Hitboxes", onToggleDebugHitboxes);

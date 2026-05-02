@@ -161,7 +161,8 @@ export class WaveManager {
       const initialSpawnDelay = waveIndex === 0 ? (this.waveConfig.firstWaveInitialSpawnDelay ?? this.waveConfig.initialSpawnDelay) : this.waveConfig.initialSpawnDelay;
       const spawnQueue = waveDefinition.groups.flatMap((group, groupIndex) => {
         const enemyConfig = this.enemyConfigs[group.enemyType];
-        const count = Math.max(1, Math.round(group.count * waveCountScale * this.difficultyConfig.enemyCountMultiplier));
+        const scaledCount = Math.max(1, Math.round(group.count * waveCountScale * this.difficultyConfig.enemyCountMultiplier));
+        const count = this.getSpawnCountForGroup(group.enemyType, scaledCount);
         const healthMultiplier = group.healthMultiplier ?? 1;
         const speedMultiplier = group.speedMultiplier ?? 1;
         const groupSpawnInterval = Math.max(
@@ -195,6 +196,16 @@ export class WaveManager {
         goldIncome
       };
     });
+  }
+
+  private getSpawnCountForGroup(enemyType: EnemyType, scaledCount: number): number {
+    if (enemyType !== "boss") {
+      return scaledCount;
+    }
+    if (this.difficultyConfig.id === "hard" || this.difficultyConfig.id === "insane") {
+      return 2;
+    }
+    return 1;
   }
 
   private getScheduledSpawnTime(wave: Wave, spawnIndex: number): number {

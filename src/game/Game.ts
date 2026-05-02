@@ -4,7 +4,7 @@ import { Tower } from "../entities/Tower";
 import { DIFFICULTY_CONFIGS } from "../config/difficulties";
 import { ENEMY_CONFIGS } from "../config/enemies";
 import { ECONOMY_CONFIG, SCORE_CONFIG } from "../config/economy";
-import { CAMERA_CONFIG, GENERIC_ENEMY_SPRITE_KEYS, MISSION_CONFIGS, MISSION_THEME_CONFIGS } from "../config/missions";
+import { CAMERA_CONFIG, GENERIC_ENEMY_SPRITE_KEYS, MISSION_CONFIGS, MISSION_ORDER, MISSION_THEME_CONFIGS } from "../config/missions";
 import { getPathStyleForTheme, PROTOTYPE_FOREST_THEME } from "../config/theme";
 import { TOWER_CONFIGS } from "../config/towers";
 import { DEFAULT_WAVE_CONFIG } from "../config/waves";
@@ -126,6 +126,7 @@ export class Game {
       () => this.resume(),
       () => this.restartMission(),
       () => this.returnToMenu(),
+      () => this.continueAfterVictory(),
       () => this.toggleDebugMode(),
       () => this.skipToNextWave(),
       (speed) => this.setGameSpeed(speed),
@@ -377,6 +378,19 @@ export class Game {
     this.waveManager = this.createWaveManager();
     this.runResult = null;
     this.updateUi();
+  }
+
+  continueAfterVictory(): void {
+    if (this.state !== "won") return;
+
+    const currentIndex = MISSION_ORDER.indexOf(this.missionId);
+    const nextMissionId = MISSION_ORDER[currentIndex + 1];
+    if (nextMissionId) {
+      this.startMission(nextMissionId, this.difficultyId);
+      return;
+    }
+
+    this.returnToMenu();
   }
 
   private loop(time: number): void {
@@ -1101,7 +1115,8 @@ export class Game {
       forest: "forest-ambient",
       desert: "desert-ambient",
       lava: "lava-ambient",
-      ice: "ice-ambient"
+      ice: "ice-ambient",
+      island: "island-ambient"
     };
     return map[themeId] ?? "forest-ambient";
   }

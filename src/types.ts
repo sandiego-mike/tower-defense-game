@@ -9,11 +9,11 @@ export type TargetingMode = "first" | "strongest" | "closest" | "fastest";
 
 export type EnemyType = "basic" | "fast" | "tank" | "swarm" | "boss";
 
-export type DifficultyId = "easy" | "normal" | "hard";
+export type DifficultyId = "easy" | "normal" | "hard" | "insane";
 
-export type MissionId = "green-pass" | "desert-bend" | "lava-spill" | "ice-tundra";
+export type MissionId = "green-pass" | "desert-bend" | "lava-spill" | "ice-tundra" | "island-cove";
 
-export type MissionThemeId = "forest" | "desert" | "lava" | "ice";
+export type MissionThemeId = "forest" | "desert" | "lava" | "ice" | "island";
 
 export type GameState = "menu" | "playing" | "paused" | "won" | "lost";
 
