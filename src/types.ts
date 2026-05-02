@@ -9,7 +9,7 @@ export type TargetingMode = "first" | "strongest" | "closest" | "fastest";
 
 export type EnemyType = "basic" | "fast" | "tank" | "swarm" | "boss";
 
-export type DifficultyId = "easy" | "normal" | "hard" | "insane";
+export type DifficultyId = "easy" | "normal" | "hard";
 
 export type MissionId = "green-pass" | "desert-bend" | "lava-spill" | "ice-tundra" | "island-cove";
 

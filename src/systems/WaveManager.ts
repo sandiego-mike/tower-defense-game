@@ -202,7 +202,7 @@ export class WaveManager {
     if (enemyType !== "boss") {
       return scaledCount;
     }
-    if (this.difficultyConfig.id === "hard" || this.difficultyConfig.id === "insane") {
+    if (this.difficultyConfig.id === "normal" || this.difficultyConfig.id === "hard") {
       return 2;
     }
     return 1;
