@@ -42,9 +42,15 @@ export const ASSET_MANIFEST: AssetDefinition[] = [
   { key: "island-tank-enemy", src: "/assets/enemies/island/island-tank-enemy.png", removeBackground: true },
   { key: "island-swarm-enemy", src: "/assets/enemies/island/island-swarm-enemy.png", removeBackground: true },
   { key: "island-boss-enemy", src: "/assets/enemies/island/island-boss-enemy.png", removeBackground: true },
+  { key: "city-basic-enemy", src: "/assets/enemies/city/city-basic-enemy.png", removeBackground: true },
+  { key: "city-fast-enemy", src: "/assets/enemies/city/city-fast-enemy.png", removeBackground: true },
+  { key: "city-tank-enemy", src: "/assets/enemies/city/city-tank-enemy.png", removeBackground: true },
+  { key: "city-swarm-enemy", src: "/assets/enemies/city/city-swarm-enemy.png", removeBackground: true },
+  { key: "city-boss-enemy", src: "/assets/enemies/city/city-boss-enemy.png", removeBackground: true },
   { key: "forest-map", src: "/assets/maps/forest-map.png" },
   { key: "desert-map", src: "/assets/maps/desert-map.png" },
   { key: "lava-map", src: "/assets/maps/lava-map.png" },
   { key: "ice-map", src: "/assets/maps/ice-map.png" },
-  { key: "island-map", src: "/assets/maps/island-map.png" }
+  { key: "island-map", src: "/assets/maps/island-map.png" },
+  { key: "city-map", src: "/assets/maps/city-map.png" }
 ];

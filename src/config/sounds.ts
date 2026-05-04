@@ -1,4 +1,4 @@
-export type AmbientKey = "forest-ambient" | "desert-ambient" | "lava-ambient" | "ice-ambient" | "island-ambient";
+export type AmbientKey = "forest-ambient" | "desert-ambient" | "lava-ambient" | "ice-ambient" | "island-ambient" | "city-ambient";
 
 export type AmbientConfig = {
   key: AmbientKey;
@@ -12,7 +12,8 @@ export const AMBIENT_CONFIGS: AmbientConfig[] = [
   { key: "desert-ambient", path: "/assets/sounds/ambient/desert-ambient.mp3", volume: 0.10, enabled: true },
   { key: "lava-ambient", path: "/assets/sounds/ambient/lava-ambient.mp3", volume: 0.12, enabled: true },
   { key: "ice-ambient", path: "/assets/sounds/ambient/ice-ambient.mp3", volume: 0.10, enabled: true },
-  { key: "island-ambient", path: "/assets/sounds/ambient/island-ambient.mp3", volume: 0.10, enabled: true }
+  { key: "island-ambient", path: "/assets/sounds/ambient/island-ambient.mp3", volume: 0.10, enabled: true },
+  { key: "city-ambient", path: "/assets/sounds/ambient/city-ambient.mp3", volume: 0.10, enabled: true }
 ];
 
 export type SoundKey =

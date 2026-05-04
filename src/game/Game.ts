@@ -1157,7 +1157,8 @@ export class Game {
       desert: "desert-ambient",
       lava: "lava-ambient",
       ice: "ice-ambient",
-      island: "island-ambient"
+      island: "island-ambient",
+      city: "city-ambient"
     };
     return map[themeId] ?? "forest-ambient";
   }

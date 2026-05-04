@@ -1,6 +1,6 @@
 import { CameraConfig, MissionConfig, MissionId, MissionThemeConfig, MissionThemeId } from "../types";
 
-export const MISSION_ORDER: MissionId[] = ["green-pass", "desert-bend", "lava-spill", "ice-tundra", "island-cove"];
+export const MISSION_ORDER: MissionId[] = ["green-pass", "desert-bend", "lava-spill", "ice-tundra", "island-cove", "city-grid"];
 
 export const GENERIC_ENEMY_SPRITE_KEYS = {
   basic: "basic-enemy",
@@ -144,6 +144,29 @@ export const MISSION_THEME_CONFIGS: Record<MissionThemeId, MissionThemeConfig> =
       shadowEnabled: true,
       shadowOpacity: 0.23
     }
+  },
+  city: {
+    id: "city",
+    label: "City",
+    enemySpriteKeys: {
+      basic: "city-basic-enemy",
+      fast: "city-fast-enemy",
+      tank: "city-tank-enemy",
+      swarm: "city-swarm-enemy",
+      boss: "city-boss-enemy"
+    },
+    bossVisual: {
+      anchorX: 0.5,
+      anchorY: 0.86,
+      shadowEnabled: true,
+      shadowOpacity: 0.24
+    },
+    // City cockroach and fly art faces upward in the source PNGs, while the
+    // shared enemy fallback assumes downward-facing sprites.
+    enemySpriteForwardAngles: {
+      tank: -Math.PI / 2,
+      swarm: -Math.PI / 2
+    }
   }
 };
 
@@ -279,6 +302,27 @@ export const MISSION_CONFIGS: Record<MissionId, MissionConfig> = {
       { x: 0.86,  y: 0.38 },
       { x: 0.86,  y: 0.58 },
       { x: 1.04,  y: 0.58 }
+    ]
+  },
+  "city-grid": {
+    id: "city-grid",
+    label: "City Grid",
+    description: "An urban route through city blocks and tight intersections — strong tower coverage is rewarded across long straightaways.",
+    themeId: "city",
+    backgroundImageKey: "city-map",
+    // Shape: city-block switchback — medium-hard turns and straightaways with
+    // more pressure than Desert, but less compression than Lava.
+    path: [
+      { x: -0.04, y: 0.24 },
+      { x: 0.24,  y: 0.24 },
+      { x: 0.24,  y: 0.54 },
+      { x: 0.46,  y: 0.54 },
+      { x: 0.46,  y: 0.18 },
+      { x: 0.70,  y: 0.18 },
+      { x: 0.70,  y: 0.74 },
+      { x: 0.88,  y: 0.74 },
+      { x: 0.88,  y: 0.42 },
+      { x: 1.04,  y: 0.42 }
     ]
   }
 };

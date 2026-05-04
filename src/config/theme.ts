@@ -94,6 +94,17 @@ export const PATH_STYLES_BY_THEME: Partial<Record<MissionThemeId, PathVisualStyl
     accentWidth: 3,
     accentAlpha: 0.22,
     accentDash: [3, 18]
+  },
+  city: {
+    outerColor: "#2f3438",
+    innerColor: "#555a5f",
+    highlightColor: "#7a8086",
+    highlightWidth: 5,
+    highlightAlpha: 0.24,
+    accentColor: "#f2d35e",
+    accentWidth: 3,
+    accentAlpha: 0.42,
+    accentDash: [28, 26]
   }
 };
 

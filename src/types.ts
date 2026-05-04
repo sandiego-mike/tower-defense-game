@@ -11,9 +11,9 @@ export type EnemyType = "basic" | "fast" | "tank" | "swarm" | "boss";
 
 export type DifficultyId = "easy" | "normal" | "hard";
 
-export type MissionId = "green-pass" | "desert-bend" | "lava-spill" | "ice-tundra" | "island-cove";
+export type MissionId = "green-pass" | "desert-bend" | "lava-spill" | "ice-tundra" | "island-cove" | "city-grid";
 
-export type MissionThemeId = "forest" | "desert" | "lava" | "ice" | "island";
+export type MissionThemeId = "forest" | "desert" | "lava" | "ice" | "island" | "city";
 
 export type GameState = "menu" | "playing" | "paused" | "won" | "lost";
 
