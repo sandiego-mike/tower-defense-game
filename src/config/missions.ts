@@ -161,9 +161,10 @@ export const MISSION_THEME_CONFIGS: Record<MissionThemeId, MissionThemeConfig> =
       shadowEnabled: true,
       shadowOpacity: 0.24
     },
-    // City cockroach and fly art faces upward in the source PNGs, while the
-    // shared enemy fallback assumes downward-facing sprites.
+    // City enemy art uses mixed source directions, while the shared enemy
+    // fallback assumes downward-facing sprites.
     enemySpriteForwardAngles: {
+      fast: 0,
       tank: -Math.PI / 2,
       swarm: -Math.PI / 2
     }
